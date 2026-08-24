@@ -13,13 +13,13 @@ export function dayRange(date: Date, timezone: string) {
 
 export function weekRange(date: Date, timezone: string) {
   const ymd = ymdInZone(date, timezone);
-  const dow = new Date(`${ymd}T12:00:00Z`).getUTCDay();
-  const mondayOffset = dow === 0 ? -6 : 1 - dow; // weeks start Monday
-  const monday = addDays(ymd, mondayOffset);
+  // Weeks run Sunday to Saturday, as they do in Israel.
+  const dow = new Date(`${ymd}T12:00:00Z`).getUTCDay(); // 0 = Sunday
+  const weekStart = addDays(ymd, -dow);
   return {
-    start: zonedStartOfDay(monday, timezone),
-    end: zonedStartOfDay(addDays(monday, 7), timezone),
-    monday,
+    start: zonedStartOfDay(weekStart, timezone),
+    end: zonedStartOfDay(addDays(weekStart, 7), timezone),
+    weekStart,
   };
 }
 

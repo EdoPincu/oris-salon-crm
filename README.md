@@ -34,8 +34,8 @@ The database starts empty on purpose — no demo data.
    npx tsx scripts/promote-owner.ts ori@example.com
    ```
    Until this runs they are a `client` and cannot reach the admin area.
-3. In **Settings**, check the timezone and currency (they default to
-   `Europe/Berlin` and `EUR`), then add a tech and set working hours.
+3. In **Settings**, add a tech and set working hours. Timezone and currency
+   are already `Asia/Jerusalem` and `ILS`.
 4. In **Services**, add what clients can book.
 
 `/book` stays closed until at least one service, one tech and some working
@@ -69,7 +69,10 @@ Availability is computed by `get_available_slots()`. Both functions are
 `appointments` or `clients` — a visitor learns which slots are free and
 nothing about who is in them.
 
-Money is stored as integer cents. Prices and durations are **snapshotted**
+Weeks run **Sunday to Saturday** throughout — the calendar, the working-hours
+editor and `weekRange()` in `lib/time.ts`.
+
+Money is stored as integer agorot (cents). Prices and durations are **snapshotted**
 onto `appointment_services` at booking time, so changing a price never
 rewrites past revenue.
 

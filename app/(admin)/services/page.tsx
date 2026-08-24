@@ -12,7 +12,7 @@ export default async function ServicesPage() {
     supabase.from("settings").select("currency").single(),
   ]);
 
-  const currency = settings?.currency ?? "EUR";
+  const currency = settings?.currency ?? "ILS";
   const list = services ?? [];
 
   return (

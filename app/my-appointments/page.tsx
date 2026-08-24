@@ -25,8 +25,8 @@ export default async function MyAppointments() {
       .order("starts_at", { ascending: false }),
   ]);
 
-  const tz = settings?.timezone ?? "UTC";
-  const currency = settings?.currency ?? "EUR";
+  const tz = settings?.timezone ?? "Asia/Jerusalem";
+  const currency = settings?.currency ?? "ILS";
   const now = Date.now();
   const list = appts ?? [];
   const upcoming = list

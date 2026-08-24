@@ -12,8 +12,8 @@ export default async function DashboardPage() {
   const supabase = await createClient();
 
   const { data: settings } = await supabase.from("settings").select("*").single();
-  const tz = settings?.timezone ?? "UTC";
-  const currency = settings?.currency ?? "EUR";
+  const tz = settings?.timezone ?? "Asia/Jerusalem";
+  const currency = settings?.currency ?? "ILS";
   const now = new Date();
   const today = dayRange(now, tz);
   const week = weekRange(now, tz);

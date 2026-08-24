@@ -5,6 +5,11 @@ See README.md for setup and the first-run steps.
 
 ## Conventions
 
+- **The salon is in Israel**: `Asia/Jerusalem`, shekels, and weeks that run
+  **Sunday to Saturday**. `weekRange()` returns `weekStart` (a Sunday); the
+  working-hours editor lists Sunday first. Money formats with the `en-IL`
+  locale, which renders ILS as a plain `₪45.00` — `he-IL` wraps it in RTL
+  marks that read badly in this English, left-to-right UI.
 - **Money is integer cents** everywhere. Format only at the edges, via
   `lib/format.ts`. Never store or compute in floats.
 - **Times are `timestamptz`.** Wall-clock rules (working hours) are `time`

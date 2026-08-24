@@ -29,8 +29,8 @@ export default async function AppointmentPage({
 
   if (!appt) notFound();
 
-  const tz = settings?.timezone ?? "UTC";
-  const currency = settings?.currency ?? "EUR";
+  const tz = settings?.timezone ?? "Asia/Jerusalem";
+  const currency = settings?.currency ?? "ILS";
   const due = appt.appointment_services.reduce((n, s) => n + s.price_cents, 0);
   const mins = appt.appointment_services.reduce((n, s) => n + s.duration_minutes, 0);
   const paid = appt.payments.reduce((n, p) => n + p.amount_cents + p.tip_cents, 0);

@@ -1,5 +1,7 @@
 /** Money is stored as integer cents everywhere; format only at the edges. */
-export function formatMoney(cents: number, currency = "EUR", locale = "de-DE") {
+// en-IL renders ILS as a plain "₪1,234.50"; he-IL wraps it in RTL marks
+// that read badly inside this English, left-to-right UI.
+export function formatMoney(cents: number, currency = "ILS", locale = "en-IL") {
   return new Intl.NumberFormat(locale, { style: "currency", currency }).format(
     cents / 100,
   );

@@ -73,22 +73,45 @@ describe("addDays", () => {
 });
 
 describe("weekRange", () => {
-  it("starts weeks on Monday", () => {
-    // 2026-07-15 is a Wednesday.
+  it("starts weeks on Sunday", () => {
+    // 2026-07-15 is a Wednesday; the Sunday before it is the 12th.
     const w = weekRange(new Date("2026-07-15T12:00:00Z"), TZ);
-    expect(w.monday).toBe("2026-07-13");
+    expect(w.weekStart).toBe("2026-07-12");
   });
 
-  it("treats Sunday as the end of the week, not the start", () => {
-    // 2026-07-19 is a Sunday.
+  it("treats Sunday as the first day, not the last", () => {
+    // 2026-07-19 is itself a Sunday, so it opens its own week.
     const w = weekRange(new Date("2026-07-19T12:00:00Z"), TZ);
-    expect(w.monday).toBe("2026-07-13");
+    expect(w.weekStart).toBe("2026-07-19");
   });
 
-  it("spans exactly seven local days", () => {
-    const w = weekRange(new Date("2026-10-21T12:00:00Z"), TZ); // week contains DST change
+  it("puts Saturday at the end of the week", () => {
+    // 2026-07-18 is a Saturday, closing the week that began on the 12th.
+    const w = weekRange(new Date("2026-07-18T12:00:00Z"), TZ);
+    expect(w.weekStart).toBe("2026-07-12");
+    expect(addDays(w.weekStart, 6)).toBe("2026-07-18");
+  });
+
+  it("spans seven local days across a normal week", () => {
+    const w = weekRange(new Date("2026-07-15T12:00:00Z"), TZ);
     const hours = (w.end.getTime() - w.start.getTime()) / 3600_000;
-    expect(hours).toBe(7 * 24 + 1); // one extra hour from falling back
+    expect(hours).toBe(7 * 24);
+  });
+
+  it("gains an hour in the week that contains the fall-back", () => {
+    // Berlin falls back at 03:00 on Sunday 2026-10-25, which opens this week.
+    const w = weekRange(new Date("2026-10-28T12:00:00Z"), TZ);
+    expect(w.weekStart).toBe("2026-10-25");
+    const hours = (w.end.getTime() - w.start.getTime()) / 3600_000;
+    expect(hours).toBe(7 * 24 + 1);
+  });
+
+  it("loses an hour in the week that contains the spring-forward", () => {
+    // Berlin springs forward at 02:00 on Sunday 2026-03-29.
+    const w = weekRange(new Date("2026-04-01T12:00:00Z"), TZ);
+    expect(w.weekStart).toBe("2026-03-29");
+    const hours = (w.end.getTime() - w.start.getTime()) / 3600_000;
+    expect(hours).toBe(7 * 24 - 1);
   });
 });
 

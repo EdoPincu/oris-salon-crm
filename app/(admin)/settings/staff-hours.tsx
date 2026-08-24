@@ -1,14 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { saveStaff, saveHours } from "@/lib/actions";
 
+// Sunday first, Saturday last — the Israeli working week.
 const DAYS = [
+  { n: 0, label: "Sunday" },
   { n: 1, label: "Monday" },
   { n: 2, label: "Tuesday" },
   { n: 3, label: "Wednesday" },
   { n: 4, label: "Thursday" },
   { n: 5, label: "Friday" },
   { n: 6, label: "Saturday" },
-  { n: 0, label: "Sunday" },
 ];
 
 type Staff = { id: string; display_name: string };

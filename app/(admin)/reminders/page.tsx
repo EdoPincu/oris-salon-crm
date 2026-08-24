@@ -15,7 +15,7 @@ export default async function RemindersPage() {
       supabase.rpc("clients_lapsed"),
     ]);
 
-  const tz = settings?.timezone ?? "UTC";
+  const tz = settings?.timezone ?? "Asia/Jerusalem";
   const salon = settings?.display_name ?? "the salon";
 
   const dueRows = (refill ?? []).map((r) => ({

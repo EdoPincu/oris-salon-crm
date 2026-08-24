@@ -12,8 +12,8 @@ export default async function ReportsPage() {
     .select("timezone, currency")
     .single();
 
-  const tz = settings?.timezone ?? "UTC";
-  const currency = settings?.currency ?? "EUR";
+  const tz = settings?.timezone ?? "Asia/Jerusalem";
+  const currency = settings?.currency ?? "ILS";
   const today = ymdInZone(new Date(), tz);
   const since = zonedStartOfDay(addDays(today, -89), tz);
 

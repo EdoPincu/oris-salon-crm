@@ -27,13 +27,13 @@ export default async function CalendarPage({
     .from("settings")
     .select("timezone")
     .single();
-  const tz = settings?.timezone ?? "UTC";
+  const tz = settings?.timezone ?? "Asia/Jerusalem";
 
   const anchor = weekParam
     ? zonedStartOfDay(weekParam, tz)
     : new Date();
   const week = weekRange(anchor, tz);
-  const dayYmds = Array.from({ length: 7 }, (_, i) => addDays(week.monday, i));
+  const dayYmds = Array.from({ length: 7 }, (_, i) => addDays(week.weekStart, i));
 
   const { data: appts } = await supabase
     .from("appointments")
@@ -44,8 +44,8 @@ export default async function CalendarPage({
     .order("starts_at");
 
   const list = appts ?? [];
-  const prev = addDays(week.monday, -7);
-  const next = addDays(week.monday, 7);
+  const prev = addDays(week.weekStart, -7);
+  const next = addDays(week.weekStart, 7);
   const todayYmd = ymdInZone(new Date(), tz);
 
   return (
@@ -54,11 +54,11 @@ export default async function CalendarPage({
         <div>
           <h1 className="text-3xl">Calendar</h1>
           <p className="mt-1 text-on-surface-variant">
-            {new Date(`${week.monday}T12:00:00Z`).toLocaleDateString("en-GB", {
+            {new Date(`${week.weekStart}T12:00:00Z`).toLocaleDateString("en-GB", {
               day: "numeric", month: "long", timeZone: "UTC",
             })}{" "}
             –{" "}
-            {new Date(`${addDays(week.monday, 6)}T12:00:00Z`).toLocaleDateString("en-GB", {
+            {new Date(`${addDays(week.weekStart, 6)}T12:00:00Z`).toLocaleDateString("en-GB", {
               day: "numeric", month: "long", year: "numeric", timeZone: "UTC",
             })}
           </p>

@@ -24,8 +24,8 @@ export default async function ClientDetail({
 
   if (!client) notFound();
 
-  const tz = settings?.timezone ?? "UTC";
-  const currency = settings?.currency ?? "EUR";
+  const tz = settings?.timezone ?? "Asia/Jerusalem";
+  const currency = settings?.currency ?? "ILS";
 
   const { data: visits } = await supabase
     .from("appointments")
