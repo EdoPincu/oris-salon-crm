@@ -1,26 +1,100 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * "Serene Elegance" — the design system Stitch generated for Ori's Salon.
+ * Token names and values come straight from the Stitch design theme so the
+ * built UI and the design stay in step.
+ */
+@theme {
+  /* surfaces */
+  --color-surface: #fff8f6;
+  --color-surface-dim: #e3d8d4;
+  --color-surface-bright: #fff8f6;
+  --color-surface-lowest: #ffffff;
+  --color-surface-low: #fdf1ed;
+  --color-surface-container: #f7ebe8;
+  --color-surface-high: #f2e6e2;
+  --color-surface-highest: #ece0dd;
+  --color-surface-variant: #ece0dd;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* text & lines */
+  --color-on-surface: #201a18;
+  --color-on-surface-variant: #514343;
+  --color-inverse-surface: #352f2d;
+  --color-inverse-on-surface: #faeeeb;
+  --color-outline: #847373;
+  --color-outline-variant: #d6c2c1;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* primary — muted rose */
+  --color-primary: #845050;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #c98b8b;
+  --color-on-primary-container: #512627;
+  --color-primary-fixed: #ffdad9;
+  --color-primary-fixed-dim: #f9b5b5;
+
+  /* secondary — soft sage */
+  --color-secondary: #506356;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #d3e8d7;
+  --color-on-secondary-container: #56695c;
+
+  /* tertiary — warm grey */
+  --color-tertiary: #5f5e5d;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #9c9b99;
+
+  /* status */
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* type */
+  --font-display: "Libre Caslon Text", Georgia, "Times New Roman", serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+
+  /* radii */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  /* layout */
+  --spacing-gutter: 24px;
+  --spacing-stack-sm: 12px;
+  --spacing-stack-md: 24px;
+  --spacing-stack-lg: 48px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Focus ring that stays visible against the warm surfaces. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+@layer components {
+  .input {
+    width: 100%;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-outline-variant);
+    background: var(--color-surface-lowest);
+    padding: 0.5rem 0.75rem;
+    color: var(--color-on-surface);
+  }
+  .input::placeholder { color: var(--color-outline); }
 }

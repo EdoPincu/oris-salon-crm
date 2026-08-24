@@ -1,9 +1,41 @@
-<!-- BEGIN:nextjs-agent-rules -->
+# Working in this repo
 
-# This is NOT the Next.js you know
+Nail salon CRM: Next.js App Router + Supabase (Postgres, Auth, RLS).
+See README.md for setup and the first-run steps.
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+## Conventions
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+- **Money is integer cents** everywhere. Format only at the edges, via
+  `lib/format.ts`. Never store or compute in floats.
+- **Times are `timestamptz`.** Wall-clock rules (working hours) are `time`
+  columns interpreted in the shop timezone from `public.settings`. Use the
+  helpers in `lib/time.ts` rather than `Date` maths — they are DST-correct and
+  covered by `tests/time.test.ts`.
+- **Booking rules live in SQL**, not TypeScript. `get_available_slots()` and
+  `book_appointment()` are the source of truth; a JS mirror would drift.
+  Change them via a migration and extend `tests/booking.test.ts`.
+- **Supabase clients**: `lib/supabase/client.ts` (browser),
+  `server.ts` (RSC/actions), `admin.ts` (service role — bypasses RLS, only
+  after an owner check or in scripts). Nothing else should construct one.
 
-<!-- END:nextjs-agent-rules -->
+## Security
+
+Every table has RLS. Two things are easy to get wrong and are tested:
+
+- RLS has **no column granularity**. `profiles` is writable by its owner, so a
+  `BEFORE UPDATE` trigger (`guard_profile_role`) is what stops a client
+  setting `role = 'owner'`. Any new self-writable table needs the same
+  thinking.
+- Inside a `SECURITY DEFINER` function, `current_user` is the function owner,
+  not the caller. Use `SECURITY INVOKER` when the function needs to know who
+  is actually asking.
+
+After changing any policy, run `npm run test` — `tests/e2e-booking.test.ts`
+asserts the client-side boundaries against the live database.
+
+## Database changes
+
+```bash
+supabase db push                                   # apply migrations
+supabase gen types typescript --linked > lib/database.types.ts
+```
