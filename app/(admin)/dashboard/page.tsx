@@ -31,11 +31,15 @@ export default async function DashboardPage() {
       .select("id, starts_at, ends_at, clients(full_name, phone), appointment_services(name, price_cents)")
       .eq("status", "pending")
       .order("starts_at"),
+    // Bounded on the appointment's starts_at, not the payment's paid_at, so
+    // this figure means the same thing as /reports' week panel — a payment
+    // recorded today for an appointment earlier in the week counts toward
+    // that earlier day, not toward whenever the owner got around to it.
     supabase
       .from("payments")
-      .select("amount_cents, tip_cents")
-      .gte("paid_at", week.start.toISOString())
-      .lt("paid_at", week.end.toISOString()),
+      .select("amount_cents, tip_cents, appointments!inner(starts_at)")
+      .gte("appointments.starts_at", week.start.toISOString())
+      .lt("appointments.starts_at", week.end.toISOString()),
     supabase.rpc("clients_due_for_refill"),
   ]);
 
