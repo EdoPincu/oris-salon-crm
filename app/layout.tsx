@@ -22,6 +22,11 @@ const frankRuhlLibre = Frank_Ruhl_Libre({
 export const metadata: Metadata = {
   title: "הסלון של אורי",
   description: "פגישות, לקוחות ותקבולים עבור הסלון של אורי.",
+  // Link-only: shared with clients directly, not meant to be discoverable.
+  // Paired with app/robots.ts — that's the request crawlers can choose to
+  // ignore, this is the header/meta tag that actually keeps an indexed page
+  // out of results if one gets fetched anyway.
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({
