@@ -78,8 +78,14 @@ function zoneOffsetMs(date: Date, timezone: string): number {
   return asUTC - date.getTime();
 }
 
+// he-IL below: these three are DISPLAY formatters — safe to localise.
+// ymdInZone and zoneOffsetMs above stay en-CA/en-US on purpose: their output
+// is parsed as machine data (slot lookups, calendar grid placement), and
+// localising them would silently break that without an error. See
+// tests/time.test.ts, which pins ymdInZone to plain ASCII YYYY-MM-DD.
+
 export function formatTime(iso: string, timezone: string) {
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat("he-IL", {
     timeZone: timezone,
     hour: "2-digit",
     minute: "2-digit",
@@ -87,7 +93,7 @@ export function formatTime(iso: string, timezone: string) {
 }
 
 export function formatDate(iso: string, timezone: string) {
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat("he-IL", {
     timeZone: timezone,
     weekday: "short",
     day: "numeric",
@@ -96,7 +102,7 @@ export function formatDate(iso: string, timezone: string) {
 }
 
 export function formatDateLong(iso: string, timezone: string) {
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat("he-IL", {
     timeZone: timezone,
     weekday: "long",
     day: "numeric",

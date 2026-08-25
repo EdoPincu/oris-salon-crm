@@ -33,14 +33,14 @@ export function CancelButton({ id }: { id: string }) {
         onClick={() => setConfirming(true)}
         className="mt-3 text-sm text-on-surface-variant underline"
       >
-        Cancel this appointment
+        ביטול התור
       </button>
     );
   }
 
   return (
     <div className="mt-3">
-      <p className="text-sm text-on-surface-variant">Cancel this appointment?</p>
+      <p className="text-sm text-on-surface-variant">לבטל את התור?</p>
       {error && <p className="mt-1 text-sm text-error">{error}</p>}
       <div className="mt-2 flex gap-2">
         <button
@@ -48,13 +48,13 @@ export function CancelButton({ id }: { id: string }) {
           onClick={cancel}
           className="rounded-md bg-error px-3 py-1.5 text-sm text-on-error disabled:opacity-60"
         >
-          {busy ? "Cancelling…" : "Yes, cancel"}
+          {busy ? "מבטלים…" : "כן, בטלו"}
         </button>
         <button
           onClick={() => setConfirming(false)}
           className="rounded-md border border-outline-variant px-3 py-1.5 text-sm"
         >
-          Keep it
+          לא, השאירו
         </button>
       </div>
     </div>

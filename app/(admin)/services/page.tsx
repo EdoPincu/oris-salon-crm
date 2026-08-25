@@ -18,16 +18,16 @@ export default async function ServicesPage() {
   return (
     <div className="max-w-4xl space-y-8">
       <header>
-        <h1 className="text-3xl">Services</h1>
+        <h1 className="text-3xl">שירותים</h1>
         <p className="mt-1 text-on-surface-variant">
-          What clients can book, how long it takes and what it costs.
+          מה הלקוחות יכולים להזמין, כמה זמן זה לוקח וכמה זה עולה.
         </p>
       </header>
 
       {list.length === 0 ? (
         <EmptyState
-          title="No services yet."
-          hint="Add your first one below — clients can't book until at least one exists."
+          title="עדיין אין שירותים."
+          hint="הוסיפו את הראשון למטה — לקוחות לא יוכלו להזמין תור עד שיהיה לפחות שירות אחד."
         />
       ) : (
         <ul className="divide-y divide-outline-variant rounded-lg border border-outline-variant bg-surface-lowest">
@@ -48,7 +48,7 @@ export default async function ServicesPage() {
                   <span className="text-sm text-on-surface-variant">
                     {formatDuration(s.duration_minutes)}
                   </span>
-                  <span className="w-20 text-right font-medium tabular-nums">
+                  <span className="w-20 text-end font-medium tabular-nums">
                     {formatMoney(s.price_cents, currency)}
                   </span>
                 </summary>
@@ -62,7 +62,7 @@ export default async function ServicesPage() {
       )}
 
       <section className="rounded-lg border border-outline-variant bg-surface-low p-5">
-        <h2 className="mb-4 text-xl">Add a service</h2>
+        <h2 className="mb-4 text-xl">הוספת שירות</h2>
         <ServiceForm />
       </section>
     </div>

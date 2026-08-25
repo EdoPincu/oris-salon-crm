@@ -50,18 +50,18 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-3xl">Today</h1>
+        <h1 className="text-3xl">היום</h1>
         <p className="mt-1 text-on-surface-variant">
           {formatDateLong(now.toISOString(), tz)}
         </p>
       </header>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat label="Appointments today" value={String(todays.length)} />
-        <Stat label="Revenue this week" value={formatMoney(revenue, currency)} />
-        <Stat label="Pending requests" value={String(pending.length)} />
+        <Stat label="פגישות היום" value={String(todays.length)} />
+        <Stat label="הכנסות השבוע" value={formatMoney(revenue, currency)} />
+        <Stat label="בקשות ממתינות" value={String(pending.length)} />
         <Stat
-          label="Due for a refill"
+          label="ממתינים למילוי"
           value={refillCount === null ? "—" : String(refillCount)}
           href="/reminders"
         />
@@ -69,11 +69,11 @@ export default async function DashboardPage() {
 
       <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
         <section>
-          <h2 className="mb-3 text-xl">Schedule</h2>
+          <h2 className="mb-3 text-xl">לוח זמנים</h2>
           {todays.length === 0 ? (
             <EmptyState
-              title="Nothing booked today."
-              hint="Appointments you add or approve will show up here."
+              title="אין פגישות היום."
+              hint="פגישות שתוסיפו או תאשרו יופיעו כאן."
             />
           ) : (
             <ul className="divide-y divide-outline-variant rounded-lg border border-outline-variant bg-surface-lowest">
@@ -84,11 +84,11 @@ export default async function DashboardPage() {
                   </span>
                   <span className="flex-1">
                     <Link href={`/appointments/${a.id}`} className="hover:underline">
-                      {a.clients?.full_name ?? "Unknown client"}
+                      {a.clients?.full_name ?? "לקוח/ה לא ידוע/ה"}
                     </Link>
                     <span className="block text-sm text-on-surface-variant">
                       {a.appointment_services.map((s) => s.name).join(", ") ||
-                        "No services listed"}
+                        "לא צוינו שירותים"}
                     </span>
                   </span>
                   <StatusChip status={a.status} />
@@ -99,16 +99,16 @@ export default async function DashboardPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 text-xl">Booking requests</h2>
+          <h2 className="mb-3 text-xl">בקשות הזמנה</h2>
           {pending.length === 0 ? (
-            <EmptyState title="No requests waiting." />
+            <EmptyState title="אין בקשות ממתינות." />
           ) : (
             <ul className="space-y-3">
               {pending.map((a) => (
                 <PendingRequest
                   key={a.id}
                   id={a.id}
-                  clientName={a.clients?.full_name ?? "Unknown"}
+                  clientName={a.clients?.full_name ?? "לא ידוע/ה"}
                   phone={a.clients?.phone ?? null}
                   when={`${formatDateLong(a.starts_at, tz)}, ${formatTime(a.starts_at, tz)}`}
                   services={a.appointment_services.map((s) => s.name)}

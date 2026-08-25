@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { formatMoney, formatDuration } from "@/lib/format";
+import { formatMoney, formatDuration, PAYMENT_METHOD_LABELS } from "@/lib/format";
 import { formatDateLong, formatTime } from "@/lib/time";
 import { StatusChip } from "@/components/status-chip";
 import { AppointmentActions } from "./actions-panel";
@@ -39,7 +39,7 @@ export default async function AppointmentPage({
     <div className="max-w-3xl space-y-8">
       <div>
         <Link href="/calendar" className="text-sm text-on-surface-variant hover:underline">
-          ← Calendar
+          ← יומן
         </Link>
       </div>
 
@@ -58,7 +58,7 @@ export default async function AppointmentPage({
       </header>
 
       <section className="rounded-lg border border-outline-variant bg-surface-lowest p-5">
-        <h2 className="mb-3 text-xl">Client</h2>
+        <h2 className="mb-3 text-xl">לקוח/ה</h2>
         <Link
           href={`/clients/${appt.clients?.id}`}
           className="font-medium hover:underline"
@@ -66,23 +66,23 @@ export default async function AppointmentPage({
           {appt.clients?.full_name}
         </Link>
         <p className="text-sm text-on-surface-variant">
-          {[appt.clients?.phone, appt.clients?.email].filter(Boolean).join(" · ") || "No contact details"}
+          {[appt.clients?.phone, appt.clients?.email].filter(Boolean).join(" · ") || "אין פרטי קשר"}
         </p>
         {appt.clients?.allergies && (
           <p className="mt-3 rounded-md bg-error-container px-3 py-2 text-sm text-on-error-container">
-            <strong>Allergies:</strong> {appt.clients.allergies}
+            <strong>אלרגיות:</strong> {appt.clients.allergies}
           </p>
         )}
       </section>
 
       <section className="rounded-lg border border-outline-variant bg-surface-lowest p-5">
-        <h2 className="mb-3 text-xl">Services</h2>
+        <h2 className="mb-3 text-xl">שירותים</h2>
         <ul className="divide-y divide-outline-variant">
           {appt.appointment_services.map((s, i) => (
             <li key={i} className="flex justify-between py-2 text-sm">
               <span>
                 {s.name}
-                <span className="ml-2 text-on-surface-variant">
+                <span className="ms-2 text-on-surface-variant">
                   {formatDuration(s.duration_minutes)}
                 </span>
               </span>
@@ -91,7 +91,7 @@ export default async function AppointmentPage({
           ))}
         </ul>
         <div className="mt-3 flex justify-between border-t border-outline-variant pt-3 font-medium">
-          <span>Total</span>
+          <span>סה״כ</span>
           <span className="tabular-nums">{formatMoney(due, currency)}</span>
         </div>
         {appt.notes && (
@@ -103,16 +103,16 @@ export default async function AppointmentPage({
 
       {appt.payments.length > 0 && (
         <section className="rounded-lg border border-outline-variant bg-surface-lowest p-5">
-          <h2 className="mb-3 text-xl">Payment</h2>
+          <h2 className="mb-3 text-xl">תשלום</h2>
           <ul className="divide-y divide-outline-variant">
             {appt.payments.map((p) => (
               <li key={p.id} className="flex justify-between py-2 text-sm">
-                <span className="capitalize">{p.method}</span>
+                <span>{PAYMENT_METHOD_LABELS[p.method] ?? p.method}</span>
                 <span className="tabular-nums">
                   {formatMoney(p.amount_cents, currency)}
                   {p.tip_cents > 0 && (
-                    <span className="ml-2 text-on-surface-variant">
-                      +{formatMoney(p.tip_cents, currency)} tip
+                    <span className="ms-2 text-on-surface-variant">
+                      +{formatMoney(p.tip_cents, currency)} טיפ
                     </span>
                   )}
                 </span>
@@ -120,7 +120,7 @@ export default async function AppointmentPage({
             ))}
           </ul>
           <div className="mt-3 flex justify-between border-t border-outline-variant pt-3 font-medium">
-            <span>Taken</span>
+            <span>התקבל</span>
             <span className="tabular-nums">{formatMoney(paid, currency)}</span>
           </div>
         </section>

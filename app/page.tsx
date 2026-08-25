@@ -13,27 +13,27 @@ export default async function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-5 text-center">
       <h1 className="font-display text-4xl text-primary">
-        {settings?.display_name ?? "Salon"}
+        {settings?.display_name ?? "סלון"}
       </h1>
       <p className="mt-3 text-on-surface-variant">
-        Book your next appointment in a couple of taps.
+        קביעת התור הבא שלך בכמה הקשות בלבד.
       </p>
 
       <Link
         href="/book"
         className="mt-8 w-full rounded-md bg-primary px-5 py-3.5 font-medium text-on-primary"
       >
-        Book an appointment
+        קביעת תור
       </Link>
       <Link
         href="/my-appointments"
         className="mt-3 w-full rounded-md border border-outline-variant px-5 py-3.5"
       >
-        My appointments
+        התורים שלי
       </Link>
 
       <Link href="/sign-in" className="mt-10 text-sm text-on-surface-variant underline">
-        Staff sign in
+        כניסת צוות
       </Link>
     </main>
   );

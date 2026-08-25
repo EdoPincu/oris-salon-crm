@@ -27,10 +27,9 @@ export default async function BookPage() {
   if (notReady) {
     return (
       <main className="mx-auto max-w-md px-5 py-16 text-center">
-        <h1 className="mb-3 text-3xl">{settings?.display_name ?? "Salon"}</h1>
+        <h1 className="mb-3 text-3xl">{settings?.display_name ?? "סלון"}</h1>
         <p className="text-on-surface-variant">
-          Online booking isn&apos;t open yet. Please get in touch with the salon
-          directly.
+          ההזמנה המקוונת עדיין לא פתוחה. אנא צרו קשר עם הסלון ישירות.
         </p>
       </main>
     );

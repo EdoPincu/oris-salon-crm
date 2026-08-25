@@ -11,7 +11,11 @@ type Props = {
   submitLabel?: string;
 };
 
-export function OtpForm({ onVerified, metadata, submitLabel = "Continue" }: Props) {
+// The shortest length a Supabase email OTP could plausibly be. Deliberately
+// not the exact configured length — see the maxLength comment below.
+const MIN_CODE_LENGTH = 6;
+
+export function OtpForm({ onVerified, metadata, submitLabel = "המשך" }: Props) {
   const supabase = createClient();
   const [stage, setStage] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
@@ -61,12 +65,13 @@ export function OtpForm({ onVerified, metadata, submitLabel = "Continue" }: Prop
       <form onSubmit={requestCode} className="space-y-4">
         <label className="block">
           <span className="text-sm font-medium text-on-surface-variant">
-            Email address
+            כתובת אימייל
           </span>
           <input
             type="email"
             required
             autoComplete="email"
+            dir="ltr"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
@@ -81,7 +86,7 @@ export function OtpForm({ onVerified, metadata, submitLabel = "Continue" }: Prop
           disabled={busy}
           className="w-full rounded-md bg-primary px-4 py-2.5 font-medium text-on-primary disabled:opacity-60"
         >
-          {busy ? "Sending…" : "Email me a code"}
+          {busy ? "שולחים…" : "שלחו לי קוד"}
         </button>
       </form>
     );
@@ -90,22 +95,29 @@ export function OtpForm({ onVerified, metadata, submitLabel = "Continue" }: Prop
   return (
     <form onSubmit={verifyCode} className="space-y-4">
       <p className="text-sm text-on-surface-variant">
-        We sent a 6-digit code to <strong className="text-on-surface">{email}</strong>.
+        קוד אימות נשלח לכתובת <strong className="text-on-surface">{email}</strong>.
       </p>
 
       <label className="block">
         <span className="text-sm font-medium text-on-surface-variant">
-          Verification code
+          קוד אימות
         </span>
         <input
           inputMode="numeric"
           autoComplete="one-time-code"
+          dir="ltr"
           required
-          maxLength={6}
+          // Not hardcoded to 6: Supabase's OTP length is a project-level Auth
+          // setting, not a fixed protocol constant. A hard maxLength here
+          // silently truncates a longer code and makes sign-in impossible —
+          // found by testing an actual sign-in end to end, not by reading
+          // the code. MIN_CODE_LENGTH below gates the submit button instead
+          // of assuming an exact digit count.
+          maxLength={10}
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
           placeholder="000000"
-          className="mt-1 w-full rounded-md border border-outline-variant bg-surface-lowest px-3 py-2.5 text-center text-2xl tracking-[0.4em] text-on-surface"
+          className="mt-1 w-full rounded-md border border-outline-variant bg-surface-lowest px-3 py-2.5 text-center text-2xl tracking-[0.3em] text-on-surface"
         />
       </label>
 
@@ -113,10 +125,10 @@ export function OtpForm({ onVerified, metadata, submitLabel = "Continue" }: Prop
 
       <button
         type="submit"
-        disabled={busy || code.length < 6}
+        disabled={busy || code.length < MIN_CODE_LENGTH}
         className="w-full rounded-md bg-primary px-4 py-2.5 font-medium text-on-primary disabled:opacity-60"
       >
-        {busy ? "Checking…" : submitLabel}
+        {busy ? "בודקים…" : submitLabel}
       </button>
 
       <button
@@ -128,7 +140,7 @@ export function OtpForm({ onVerified, metadata, submitLabel = "Continue" }: Prop
         }}
         className="w-full text-sm text-on-surface-variant underline"
       >
-        Use a different email
+        השתמשו בכתובת אימייל אחרת
       </button>
     </form>
   );

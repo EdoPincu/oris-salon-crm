@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { setAppointmentStatus, recordPayment } from "@/lib/actions";
+import { PAYMENT_METHOD_LABELS } from "@/lib/format";
 
 export function AppointmentActions({
   id,
@@ -20,7 +21,7 @@ export function AppointmentActions({
   return (
     <section className="rounded-lg border border-outline-variant bg-surface-low p-5">
       <h2 className="mb-4 text-xl">
-        {alreadyPaid ? "Update" : "Finish up"}
+        {alreadyPaid ? "עדכון" : "סיום טיפול"}
       </h2>
 
       {open && (
@@ -31,7 +32,7 @@ export function AppointmentActions({
               onClick={() => start(() => void setAppointmentStatus(id, "confirmed"))}
               className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-primary disabled:opacity-60"
             >
-              Confirm
+              אישור
             </button>
           )}
           <button
@@ -39,14 +40,14 @@ export function AppointmentActions({
             onClick={() => start(() => void setAppointmentStatus(id, "cancelled"))}
             className="rounded-md border border-outline-variant px-4 py-2 text-sm disabled:opacity-60"
           >
-            Cancel
+            ביטול
           </button>
           <button
             disabled={pending}
             onClick={() => start(() => void setAppointmentStatus(id, "no_show"))}
             className="rounded-md border border-outline-variant px-4 py-2 text-sm disabled:opacity-60"
           >
-            No show
+            לא הגיע/ה
           </button>
         </div>
       )}
@@ -56,7 +57,7 @@ export function AppointmentActions({
           <input type="hidden" name="appointment_id" value={id} />
 
           <label className="block">
-            <span className="text-sm font-medium text-on-surface-variant">Amount</span>
+            <span className="text-sm font-medium text-on-surface-variant">סכום</span>
             <input
               name="amount"
               type="number"
@@ -69,7 +70,7 @@ export function AppointmentActions({
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-on-surface-variant">Tip</span>
+            <span className="text-sm font-medium text-on-surface-variant">טיפ</span>
             <input
               name="tip"
               type="number"
@@ -81,12 +82,11 @@ export function AppointmentActions({
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-on-surface-variant">Method</span>
+            <span className="text-sm font-medium text-on-surface-variant">אמצעי תשלום</span>
             <select name="method" className="input mt-1" defaultValue="cash">
-              <option value="cash">Cash</option>
-              <option value="card">Card</option>
-              <option value="transfer">Transfer</option>
-              <option value="other">Other</option>
+              {Object.entries(PAYMENT_METHOD_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
             </select>
           </label>
 
@@ -95,7 +95,7 @@ export function AppointmentActions({
               type="submit"
               className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-primary"
             >
-              Record payment &amp; mark completed
+              רישום תשלום וסימון כהושלם
             </button>
           </div>
         </form>

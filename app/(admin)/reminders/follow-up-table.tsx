@@ -30,13 +30,13 @@ export function FollowUpTable({ rows }: { rows: Row[] }) {
   return (
     <div className="overflow-hidden rounded-lg border border-outline-variant bg-surface-lowest">
       <table className="w-full text-sm">
-        <thead className="bg-surface-low text-left text-on-surface-variant">
+        <thead className="bg-surface-low text-start text-on-surface-variant">
           <tr>
-            <th className="px-4 py-2 font-medium">Client</th>
-            <th className="px-4 py-2 font-medium">Last visit</th>
-            <th className="px-4 py-2 font-medium">Weeks</th>
-            <th className="px-4 py-2 font-medium">Usual</th>
-            <th className="px-4 py-2 font-medium">Phone</th>
+            <th className="px-4 py-2 font-medium">לקוח/ה</th>
+            <th className="px-4 py-2 font-medium">ביקור אחרון</th>
+            <th className="px-4 py-2 font-medium">שבועות</th>
+            <th className="px-4 py-2 font-medium">שירות רגיל</th>
+            <th className="px-4 py-2 font-medium">טלפון</th>
             <th className="px-4 py-2" />
           </tr>
         </thead>
@@ -51,18 +51,18 @@ export function FollowUpTable({ rows }: { rows: Row[] }) {
                   {r.usual ?? "—"}
                 </td>
                 <td className="px-4 py-2.5 tabular-nums">{r.phone ?? "—"}</td>
-                <td className="px-4 py-2.5 text-right">
+                <td className="px-4 py-2.5 text-end">
                   <button
                     onClick={() => copy(r)}
                     className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-on-primary"
                   >
-                    {copiedId === r.id ? "Copied" : "Copy message"}
+                    {copiedId === r.id ? "הועתק" : "העתקת הודעה"}
                   </button>
                   <button
                     onClick={() => setOpenId(openId === r.id ? null : r.id)}
-                    className="ml-2 text-xs text-on-surface-variant underline"
+                    className="ms-2 text-xs text-on-surface-variant underline"
                   >
-                    {openId === r.id ? "Hide" : "Preview"}
+                    {openId === r.id ? "הסתרה" : "תצוגה מקדימה"}
                   </button>
                 </td>
               </tr>

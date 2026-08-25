@@ -17,7 +17,7 @@ type Service = {
 type Staff = { id: string; display_name: string };
 type Slot = { slot_start: string; slot_end: string };
 
-const STEPS = ["Service", "Time", "Confirm"];
+const STEPS = ["שירות", "מועד", "אישור"];
 
 export function BookingWizard({
   salonName,
@@ -94,7 +94,11 @@ export function BookingWizard({
     if (error) {
       setError(error.message);
       // A lost race means the slot list is stale — send them back to pick again.
-      if (/no longer available|just took/i.test(error.message)) {
+      // Matched on the Postgres error CODE, not the message text: the code is
+      // language-independent, so this still works once the messages are Hebrew.
+      // book_appointment() raises 23P01 for both "slot taken" and "someone just
+      // took it" — see supabase/migrations/20260824180200_booking_functions.sql.
+      if (error.code === "23P01") {
         setSlot(null);
         setStep(1);
       }
@@ -111,15 +115,15 @@ export function BookingWizard({
             ✓
           </div>
           <h2 className="mb-2 text-2xl">
-            {autoConfirm ? "You're booked in" : "Booking requested"}
+            {autoConfirm ? "נקבע לך תור" : "הבקשה נשלחה"}
           </h2>
           <p className="mb-6 text-on-surface-variant">
             {autoConfirm
-              ? "We've saved your appointment. See you soon."
-              : `${salonName} will confirm shortly — you'll get an email once it's approved.`}
+              ? "שמרנו את התור. נתראה בקרוב!"
+              : `${salonName} יאשרו את הבקשה בקרוב — יישלח אליך אימייל לכשהיא תאושר.`}
           </p>
 
-          <div className="mb-6 rounded-lg border border-outline-variant bg-surface-lowest p-4 text-left">
+          <div className="mb-6 rounded-lg border border-outline-variant bg-surface-lowest p-4 text-start">
             <div className="font-medium">
               {selected.map((s) => s.name).join(", ")}
             </div>
@@ -140,7 +144,7 @@ export function BookingWizard({
             href="/my-appointments"
             className="inline-block rounded-md border border-outline-variant px-5 py-2.5"
           >
-            View my appointments
+            התורים שלי
           </Link>
         </div>
       </Shell>
@@ -159,7 +163,7 @@ export function BookingWizard({
 
       {step === 0 && (
         <>
-          <h2 className="mb-4 text-2xl">Select services</h2>
+          <h2 className="mb-4 text-2xl">בחרו שירותים</h2>
           <ul className="space-y-3">
             {services.map((s) => {
               const on = chosen.includes(s.id);
@@ -173,7 +177,7 @@ export function BookingWizard({
                       )
                     }
                     aria-pressed={on}
-                    className={`flex w-full items-center gap-4 rounded-lg border px-4 py-3 text-left transition-colors ${
+                    className={`flex w-full items-center gap-4 rounded-lg border px-4 py-3 text-start transition-colors ${
                       on
                         ? "border-primary bg-primary-fixed"
                         : "border-outline-variant bg-surface-lowest"
@@ -209,7 +213,7 @@ export function BookingWizard({
           {staff.length > 1 && (
             <label className="mt-6 block">
               <span className="text-sm font-medium text-on-surface-variant">
-                With
+                עם
               </span>
               <select
                 value={staffId}
@@ -228,10 +232,10 @@ export function BookingWizard({
           <StickyBar
             summary={
               chosen.length === 0
-                ? "Pick at least one service"
+                ? "בחרו לפחות שירות אחד"
                 : `${formatDuration(totalMins)} · ${formatMoney(totalPrice, currency)}`
             }
-            label="Choose a time"
+            label="בחרו שעה"
             disabled={chosen.length === 0}
             onClick={() => setStep(1)}
           />
@@ -240,7 +244,7 @@ export function BookingWizard({
 
       {step === 1 && (
         <>
-          <h2 className="mb-4 text-2xl">Pick a time</h2>
+          <h2 className="mb-4 text-2xl">בחרו מועד</h2>
 
           <div className="mb-5 flex gap-2 overflow-x-auto pb-2">
             {Array.from({ length: Math.min(horizonDays, 21) }, (_, i) =>
@@ -263,7 +267,7 @@ export function BookingWizard({
                   }`}
                 >
                   <span className="text-xs uppercase">
-                    {dt.toLocaleDateString("en-GB", {
+                    {dt.toLocaleDateString("he-IL", {
                       weekday: "short",
                       timeZone: "UTC",
                     })}
@@ -275,16 +279,16 @@ export function BookingWizard({
           </div>
 
           <p className="mb-3 text-sm text-on-surface-variant">
-            This appointment lasts {formatDuration(totalMins)}.
+            משך הטיפול: {formatDuration(totalMins)}.
           </p>
 
           {slots === null ? (
             <p className="py-8 text-center text-on-surface-variant">
-              Looking for free times…
+              מחפשים מועדים פנויים…
             </p>
           ) : slots.length === 0 ? (
             <p className="rounded-lg border border-dashed border-outline-variant px-4 py-8 text-center text-on-surface-variant">
-              Nothing free on this day. Try another date.
+              אין מועדים פנויים ביום זה. נסו תאריך אחר.
             </p>
           ) : (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -312,9 +316,9 @@ export function BookingWizard({
             summary={
               slot
                 ? `${formatDateLong(slot.slot_start, timezone)}, ${formatTime(slot.slot_start, timezone)}`
-                : "Choose a time"
+                : "בחרו שעה"
             }
-            label="Continue"
+            label="המשך"
             disabled={!slot}
             onClick={() => setStep(2)}
             onBack={() => setStep(0)}
@@ -324,7 +328,7 @@ export function BookingWizard({
 
       {step === 2 && (
         <>
-          <h2 className="mb-4 text-2xl">Your details</h2>
+          <h2 className="mb-4 text-2xl">הפרטים שלך</h2>
 
           <div className="mb-6 rounded-lg border border-outline-variant bg-surface-low p-4 text-sm">
             <div className="font-medium">
@@ -344,7 +348,7 @@ export function BookingWizard({
               <div className="mb-5 space-y-4">
                 <label className="block">
                   <span className="text-sm font-medium text-on-surface-variant">
-                    Full name
+                    שם מלא
                   </span>
                   <input
                     value={name}
@@ -356,12 +360,13 @@ export function BookingWizard({
                 </label>
                 <label className="block">
                   <span className="text-sm font-medium text-on-surface-variant">
-                    Phone (optional)
+                    טלפון (לא חובה)
                   </span>
                   <input
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     autoComplete="tel"
+                    dir="ltr"
                     className="input mt-1"
                   />
                 </label>
@@ -369,12 +374,12 @@ export function BookingWizard({
 
               {name.trim().length < 2 ? (
                 <p className="text-sm text-on-surface-variant">
-                  Enter your name to continue.
+                  הזינו שם כדי להמשיך.
                 </p>
               ) : (
                 <OtpForm
                   metadata={{ full_name: name.trim(), phone: phone.trim() }}
-                  submitLabel="Verify email"
+                  submitLabel="אימות אימייל"
                   onVerified={() => setVerified(true)}
                 />
               )}
@@ -382,7 +387,7 @@ export function BookingWizard({
           ) : (
             <>
               <p className="mb-4 rounded-md bg-secondary-container px-3 py-2 text-sm text-on-secondary-container">
-                Email verified.
+                האימייל אומת.
               </p>
               <button
                 type="button"
@@ -390,7 +395,7 @@ export function BookingWizard({
                 onClick={confirmBooking}
                 className="w-full rounded-md bg-primary px-4 py-3 font-medium text-on-primary disabled:opacity-60"
               >
-                {busy ? "Booking…" : "Confirm booking"}
+                {busy ? "קובעים תור…" : "אישור התור"}
               </button>
             </>
           )}
@@ -400,7 +405,7 @@ export function BookingWizard({
             onClick={() => setStep(1)}
             className="mt-4 w-full text-sm text-on-surface-variant underline"
           >
-            Back
+            חזרה
           </button>
         </>
       )}
@@ -479,7 +484,7 @@ function StickyBar({
               onClick={onBack}
               className="rounded-md border border-outline-variant px-4 py-3 text-sm"
             >
-              Back
+              חזרה
             </button>
           )}
           <button

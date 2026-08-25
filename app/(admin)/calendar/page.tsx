@@ -52,32 +52,41 @@ export default async function CalendarPage({
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl">Calendar</h1>
+          <h1 className="text-3xl">יומן</h1>
           <p className="mt-1 text-on-surface-variant">
-            {new Date(`${week.weekStart}T12:00:00Z`).toLocaleDateString("en-GB", {
+            {new Date(`${week.weekStart}T12:00:00Z`).toLocaleDateString("he-IL", {
               day: "numeric", month: "long", timeZone: "UTC",
             })}{" "}
             –{" "}
-            {new Date(`${addDays(week.weekStart, 6)}T12:00:00Z`).toLocaleDateString("en-GB", {
+            {new Date(`${addDays(week.weekStart, 6)}T12:00:00Z`).toLocaleDateString("he-IL", {
               day: "numeric", month: "long", year: "numeric", timeZone: "UTC",
             })}
           </p>
         </div>
         <div className="flex gap-2">
+          {/* ←/→ are literal, not auto-mirrored by the browser under
+              dir="rtl" — verified visually, arrows render exactly as typed.
+              Kept as conventional media-style rewind/forward icons (prev=←,
+              next=→) regardless of which side each button lands on after
+              the flex row's own RTL reversal, matching common practice for
+              temporal navigation even in RTL apps. The buttons themselves
+              do reverse position — prev ends up on the right, next on the
+              left — which happens to read consistently with the day grid
+              below (also RTL-reversed: earlier dates sit further right). */}
           <Link href={`/calendar?week=${prev}`} className="rounded-md border border-outline-variant px-3 py-2 text-sm">
-            ← Previous
+            ← הקודם
           </Link>
           <Link href="/calendar" className="rounded-md border border-outline-variant px-3 py-2 text-sm">
-            This week
+            השבוע הזה
           </Link>
           <Link href={`/calendar?week=${next}`} className="rounded-md border border-outline-variant px-3 py-2 text-sm">
-            Next →
+            הבא →
           </Link>
         </div>
       </header>
 
       {list.length === 0 && (
-        <EmptyState title="Nothing booked this week." />
+        <EmptyState title="אין פגישות השבוע." />
       )}
 
       <div className="overflow-x-auto rounded-lg border border-outline-variant bg-surface-lowest">
@@ -89,12 +98,12 @@ export default async function CalendarPage({
             return (
               <div
                 key={d}
-                className={`border-b border-l border-outline-variant px-2 py-2 text-center ${
+                className={`border-b border-s border-outline-variant px-2 py-2 text-center ${
                   isToday ? "bg-primary-fixed" : "bg-surface-low"
                 }`}
               >
                 <div className="text-xs uppercase text-on-surface-variant">
-                  {dt.toLocaleDateString("en-GB", { weekday: "short", timeZone: "UTC" })}
+                  {dt.toLocaleDateString("he-IL", { weekday: "short", timeZone: "UTC" })}
                 </div>
                 <div className="font-display text-lg">{dt.getUTCDate()}</div>
               </div>
@@ -103,13 +112,13 @@ export default async function CalendarPage({
 
           {HOURS.map((hour) => (
             <div key={hour} className="contents">
-              <div className="h-16 border-b border-outline-variant px-2 py-1 text-right text-xs text-on-surface-variant">
+              <div className="h-16 border-b border-outline-variant px-2 py-1 text-end text-xs text-on-surface-variant">
                 {String(hour).padStart(2, "0")}:00
               </div>
               {dayYmds.map((d) => (
                 <div
                   key={`${d}-${hour}`}
-                  className="relative h-16 border-b border-l border-outline-variant"
+                  className="relative h-16 border-b border-s border-outline-variant"
                 >
                   {list
                     .filter((a) => {
@@ -135,7 +144,7 @@ export default async function CalendarPage({
                           }`}
                         >
                           <span className="block font-medium">
-                            {a.clients?.full_name ?? "Client"}
+                            {a.clients?.full_name ?? "לקוח/ה"}
                           </span>
                           <span className="block truncate opacity-80">
                             {formatTime(a.starts_at, tz)}{" "}

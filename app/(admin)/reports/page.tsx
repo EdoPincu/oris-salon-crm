@@ -35,10 +35,10 @@ export default async function ReportsPage() {
   if (pays.length === 0) {
     return (
       <div className="max-w-4xl space-y-6">
-        <h1 className="text-3xl">Reports</h1>
+        <h1 className="text-3xl">דוחות</h1>
         <EmptyState
-          title="No takings recorded yet."
-          hint="Complete an appointment and record its payment to start building this."
+          title="עדיין לא נרשמו תקבולים."
+          hint="השלימו פגישה ורשמו את התשלום כדי להתחיל לבנות את הדוח הזה."
         />
       </div>
     );
@@ -65,7 +65,7 @@ export default async function ReportsPage() {
   // Top clients and service mix.
   const byClient = new Map<string, number>();
   for (const p of pays) {
-    const name = p.appointments?.clients?.full_name ?? "Unknown";
+    const name = p.appointments?.clients?.full_name ?? "לא ידוע/ה";
     byClient.set(name, (byClient.get(name) ?? 0) + p.amount_cents + p.tip_cents);
   }
   const topClients = [...byClient.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
@@ -80,19 +80,19 @@ export default async function ReportsPage() {
   return (
     <div className="max-w-5xl space-y-10">
       <header>
-        <h1 className="text-3xl">Reports</h1>
-        <p className="mt-1 text-on-surface-variant">Last 90 days of takings.</p>
+        <h1 className="text-3xl">דוחות</h1>
+        <p className="mt-1 text-on-surface-variant">תקבולים ב-90 הימים האחרונים.</p>
       </header>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat label="Today" value={formatMoney(total(inLast(1)), currency)} />
-        <Stat label="Last 7 days" value={formatMoney(total(inLast(7)), currency)} />
-        <Stat label="Last 30 days" value={formatMoney(total(inLast(30)), currency)} />
-        <Stat label="Tips (30 days)" value={formatMoney(inLast(30).reduce((n, p) => n + p.tip_cents, 0), currency)} />
+        <Stat label="היום" value={formatMoney(total(inLast(1)), currency)} />
+        <Stat label="7 ימים אחרונים" value={formatMoney(total(inLast(7)), currency)} />
+        <Stat label="30 ימים אחרונים" value={formatMoney(total(inLast(30)), currency)} />
+        <Stat label="טיפים (30 ימים)" value={formatMoney(inLast(30).reduce((n, p) => n + p.tip_cents, 0), currency)} />
       </div>
 
       <section>
-        <h2 className="mb-3 text-xl">Daily revenue</h2>
+        <h2 className="mb-3 text-xl">הכנסות יומיות</h2>
         <div className="flex h-40 items-end gap-1 rounded-lg border border-outline-variant bg-surface-lowest p-4">
           {days.map(([day, cents]) => (
             <div key={day} className="group relative flex-1" title={`${day}: ${formatMoney(cents, currency)}`}>
@@ -104,13 +104,13 @@ export default async function ReportsPage() {
           ))}
         </div>
         <p className="mt-2 text-sm text-on-surface-variant">
-          Peak day: {formatMoney(peak, currency)}
+          שיא יומי: {formatMoney(peak, currency)}
         </p>
       </section>
 
       <div className="grid gap-8 lg:grid-cols-2">
         <section>
-          <h2 className="mb-3 text-xl">Top clients</h2>
+          <h2 className="mb-3 text-xl">לקוחות מובילים</h2>
           <ul className="divide-y divide-outline-variant rounded-lg border border-outline-variant bg-surface-lowest">
             {topClients.map(([name, cents]) => (
               <li key={name} className="flex justify-between px-4 py-2.5 text-sm">
@@ -122,16 +122,16 @@ export default async function ReportsPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 text-xl">Service mix</h2>
+          <h2 className="mb-3 text-xl">פילוח שירותים</h2>
           {services.length === 0 ? (
-            <EmptyState title="No completed services yet." />
+            <EmptyState title="עדיין לא הושלמו שירותים." />
           ) : (
             <ul className="divide-y divide-outline-variant rounded-lg border border-outline-variant bg-surface-lowest">
               {services.map(([name, v]) => (
                 <li key={name} className="flex justify-between px-4 py-2.5 text-sm">
                   <span>
                     {name}
-                    <span className="ml-2 text-on-surface-variant">×{v.count}</span>
+                    <span className="ms-2 text-on-surface-variant">×{v.count}</span>
                   </span>
                   <span className="tabular-nums">{formatMoney(v.cents, currency)}</span>
                 </li>

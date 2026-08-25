@@ -27,33 +27,33 @@ export function ClientForm({ client }: { client?: Client }) {
     >
       {client && <input type="hidden" name="id" value={client.id} />}
 
-      <Field label="Full name">
+      <Field label="שם מלא">
         <input name="full_name" required defaultValue={client?.full_name} className="input" />
       </Field>
-      <Field label="Phone">
-        <input name="phone" defaultValue={client?.phone ?? ""} className="input" />
+      <Field label="טלפון">
+        <input name="phone" dir="ltr" defaultValue={client?.phone ?? ""} className="input" />
       </Field>
-      <Field label="Email">
-        <input name="email" type="email" defaultValue={client?.email ?? ""} className="input" />
+      <Field label="אימייל">
+        <input name="email" type="email" dir="ltr" defaultValue={client?.email ?? ""} className="input" />
       </Field>
-      <Field label="Birthday">
+      <Field label="תאריך לידה">
         <input name="birthday" type="date" defaultValue={client?.birthday ?? ""} className="input" />
       </Field>
-      <Field label="Allergies / sensitivities">
+      <Field label="אלרגיות / רגישויות">
         <input
           name="allergies"
           defaultValue={client?.allergies ?? ""}
-          placeholder="e.g. reacts to acetone"
+          placeholder="לדוגמה: רגישות לאצטון"
           className="input"
         />
       </Field>
       <div className="sm:col-span-2">
-        <Field label="Notes">
+        <Field label="הערות">
           <textarea
             name="notes"
             rows={3}
             defaultValue={client?.notes ?? ""}
-            placeholder="Preferred shapes, colours, anything worth remembering"
+            placeholder="צורות מועדפות, צבעים, כל דבר ששווה לזכור"
             className="input"
           />
         </Field>
@@ -64,7 +64,7 @@ export function ClientForm({ client }: { client?: Client }) {
           type="submit"
           className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-primary"
         >
-          {client ? "Save changes" : "Add client"}
+          {client ? "שמירת שינויים" : "הוספת לקוח/ה"}
         </button>
       </div>
     </form>

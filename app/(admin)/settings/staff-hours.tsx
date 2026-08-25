@@ -3,13 +3,13 @@ import { saveStaff, saveHours } from "@/lib/actions";
 
 // Sunday first, Saturday last — the Israeli working week.
 const DAYS = [
-  { n: 0, label: "Sunday" },
-  { n: 1, label: "Monday" },
-  { n: 2, label: "Tuesday" },
-  { n: 3, label: "Wednesday" },
-  { n: 4, label: "Thursday" },
-  { n: 5, label: "Friday" },
-  { n: 6, label: "Saturday" },
+  { n: 0, label: "ראשון" },
+  { n: 1, label: "שני" },
+  { n: 2, label: "שלישי" },
+  { n: 3, label: "רביעי" },
+  { n: 4, label: "חמישי" },
+  { n: 5, label: "שישי" },
+  { n: 6, label: "שבת" },
 ];
 
 type Staff = { id: string; display_name: string };
@@ -21,9 +21,9 @@ export async function StaffHours({ staff }: { staff: Staff[] }) {
   return (
     <section className="space-y-6">
       <div>
-        <h2 className="text-xl">Working hours</h2>
+        <h2 className="text-xl">שעות עבודה</h2>
         <p className="mt-1 text-sm text-on-surface-variant">
-          Clients can only book inside these hours.
+          לקוחות יכולים להזמין תור רק בתוך השעות הללו.
         </p>
       </div>
 
@@ -34,12 +34,12 @@ export async function StaffHours({ staff }: { staff: Staff[] }) {
         >
           <label className="flex-1">
             <span className="text-sm font-medium text-on-surface-variant">
-              Add yourself as the first tech
+              הוסיפו את עצמכם כטכנאי/ת הראשון/ה
             </span>
             <input
               name="display_name"
               required
-              placeholder="Ori"
+              placeholder="אורי"
               className="input mt-1"
             />
           </label>
@@ -47,7 +47,7 @@ export async function StaffHours({ staff }: { staff: Staff[] }) {
             type="submit"
             className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-primary"
           >
-            Add
+            הוספה
           </button>
         </form>
       )}
@@ -82,7 +82,7 @@ export async function StaffHours({ staff }: { staff: Staff[] }) {
                       defaultValue={rule?.start_time?.slice(0, 5) ?? "09:00"}
                       className="input w-32"
                     />
-                    <span className="text-on-surface-variant">to</span>
+                    <span className="text-on-surface-variant">עד</span>
                     <input
                       type="time"
                       name={`end_${day.n}`}
@@ -98,7 +98,7 @@ export async function StaffHours({ staff }: { staff: Staff[] }) {
               type="submit"
               className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-primary"
             >
-              Save hours
+              שמירת שעות
             </button>
           </form>
         );

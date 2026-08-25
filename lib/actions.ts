@@ -8,14 +8,14 @@ async function ownerClient() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not signed in");
+  if (!user) throw new Error("לא מחוברים למערכת");
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", user.id)
     .single();
-  if (profile?.role !== "owner") throw new Error("Not authorised");
+  if (profile?.role !== "owner") throw new Error("אין הרשאה");
 
   return supabase;
 }
@@ -44,7 +44,7 @@ export async function recordPayment(formData: FormData) {
   const tip = Math.round(Number(formData.get("tip") ?? 0) * 100);
   const method = String(formData.get("method") ?? "cash");
 
-  if (!Number.isFinite(amount) || amount < 0) throw new Error("Invalid amount");
+  if (!Number.isFinite(amount) || amount < 0) throw new Error("סכום לא תקין");
 
   const { error } = await supabase.from("payments").insert({
     appointment_id: appointmentId,
@@ -76,9 +76,9 @@ export async function saveService(formData: FormData) {
     active: formData.get("active") === "on",
   };
 
-  if (!row.name) throw new Error("Name is required");
+  if (!row.name) throw new Error("יש להזין שם");
   if (!row.duration_minutes || row.duration_minutes <= 0)
-    throw new Error("Duration must be greater than zero");
+    throw new Error("משך הזמן חייב להיות גדול מאפס");
 
   const { error } = id
     ? await supabase.from("services").update(row).eq("id", id)
@@ -112,7 +112,7 @@ export async function saveClient(formData: FormData) {
     birthday: String(formData.get("birthday") ?? "") || null,
   };
 
-  if (!row.full_name) throw new Error("Name is required");
+  if (!row.full_name) throw new Error("יש להזין שם");
 
   const { error } = id
     ? await supabase.from("clients").update(row).eq("id", id)
@@ -138,7 +138,7 @@ export async function saveSettings(formData: FormData) {
     updated_at: new Date().toISOString(),
   };
 
-  if (!row.display_name) throw new Error("Salon name is required");
+  if (!row.display_name) throw new Error("יש להזין שם לסלון");
 
   const { error } = await supabase.from("settings").update(row).eq("id", true);
   if (error) throw new Error(error.message);
@@ -151,7 +151,7 @@ export async function saveStaff(formData: FormData) {
   const supabase = await ownerClient();
   const id = formData.get("id") ? String(formData.get("id")) : null;
   const display_name = String(formData.get("display_name") ?? "").trim();
-  if (!display_name) throw new Error("Name is required");
+  if (!display_name) throw new Error("יש להזין שם");
 
   const { error } = id
     ? await supabase.from("staff").update({ display_name }).eq("id", id)

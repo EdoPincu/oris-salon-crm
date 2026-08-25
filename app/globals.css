@@ -50,9 +50,20 @@
   --color-error-container: #ffdad6;
   --color-on-error-container: #93000a;
 
-  /* type */
-  --font-display: "Libre Caslon Text", Georgia, "Times New Roman", serif;
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  /* type — Hebrew/RTL conversion: Frank Ruhl Libre + Heebo replace Libre
+     Caslon Text + DM Sans, which have no Hebrew glyphs. Literal family
+     names, not var(--font-heebo)/var(--font-frank-ruhl): those next/font
+     variables are only defined on <body> (via its className in layout.tsx),
+     but this @theme block resolves at :root — an ANCESTOR of body — and
+     custom properties don't inherit upward, so var(--font-heebo) here
+     silently resolved to nothing and the whole app fell back to the system
+     font stack. next/font's @font-face rules are injected globally under
+     the literal family name regardless of which element holds the class,
+     so referencing "Heebo"/"Frank Ruhl Libre" directly sidesteps the
+     scoping problem entirely. Caught by inspecting computed font-family in
+     devtools per this project's Hebrew-conversion verification step. */
+  --font-display: "Frank Ruhl Libre", Georgia, "Times New Roman", serif;
+  --font-sans: "Heebo", ui-sans-serif, system-ui, sans-serif;
 
   /* radii */
   --radius-sm: 0.25rem;

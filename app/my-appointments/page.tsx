@@ -42,16 +42,16 @@ export default async function MyAppointments() {
     <main className="mx-auto max-w-lg px-5 py-10">
       <header className="mb-8 flex items-baseline justify-between">
         <h1 className="font-display text-2xl text-primary">
-          {settings?.display_name ?? "Salon"}
+          {settings?.display_name ?? "סלון"}
         </h1>
         <form action="/auth/signout" method="post">
-          <button className="text-sm text-on-surface-variant underline">Sign out</button>
+          <button className="text-sm text-on-surface-variant underline">התנתקות</button>
         </form>
       </header>
 
-      <h2 className="mb-3 text-xl">Upcoming</h2>
+      <h2 className="mb-3 text-xl">קרובים</h2>
       {upcoming.length === 0 ? (
-        <EmptyState title="Nothing booked." hint="Ready for your next set?" />
+        <EmptyState title="אין תורים קרובים." hint="מוכנה לסט הבא?" />
       ) : (
         <ul className="space-y-3">
           {upcoming.map((a) => (
@@ -67,7 +67,7 @@ export default async function MyAppointments() {
               </div>
               <div className="mt-2 text-sm">
                 {a.appointment_services.map((s) => s.name).join(", ")}
-                <span className="ml-2 text-on-surface-variant">
+                <span className="ms-2 text-on-surface-variant">
                   {formatMoney(
                     a.appointment_services.reduce((n, s) => n + s.price_cents, 0),
                     currency,
@@ -87,13 +87,13 @@ export default async function MyAppointments() {
           href="/book"
           className="block rounded-md bg-primary px-4 py-3 text-center font-medium text-on-primary"
         >
-          Book an appointment
+          קביעת תור
         </Link>
       </div>
 
       {past.length > 0 && (
         <>
-          <h2 className="mb-3 mt-10 text-xl">Past</h2>
+          <h2 className="mb-3 mt-10 text-xl">היסטוריה</h2>
           <ul className="space-y-2">
             {past.map((a) => (
               <li

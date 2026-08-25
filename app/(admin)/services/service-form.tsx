@@ -26,26 +26,26 @@ export function ServiceForm({ service }: { service?: Service }) {
     >
       {service && <input type="hidden" name="id" value={service.id} />}
 
-      <Field label="Name">
+      <Field label="שם">
         <input
           name="name"
           required
           defaultValue={service?.name}
-          placeholder="Gel manicure"
+          placeholder="מניקור ג'ל"
           className="input"
         />
       </Field>
 
-      <Field label="Description">
+      <Field label="תיאור">
         <input
           name="description"
           defaultValue={service?.description ?? ""}
-          placeholder="Optional"
+          placeholder="לא חובה"
           className="input"
         />
       </Field>
 
-      <Field label="Duration (minutes)">
+      <Field label="משך (בדקות)">
         <input
           name="duration_minutes"
           type="number"
@@ -57,7 +57,7 @@ export function ServiceForm({ service }: { service?: Service }) {
         />
       </Field>
 
-      <Field label="Price">
+      <Field label="מחיר">
         <input
           name="price"
           type="number"
@@ -76,7 +76,7 @@ export function ServiceForm({ service }: { service?: Service }) {
           name="active"
           defaultChecked={service?.active ?? true}
         />
-        Bookable
+        זמין להזמנה
       </label>
 
       <div className="flex justify-end gap-2 sm:col-span-2">
@@ -86,14 +86,14 @@ export function ServiceForm({ service }: { service?: Service }) {
             onClick={() => void deleteService(service.id)}
             className="rounded-md border border-outline-variant px-4 py-2 text-sm"
           >
-            Retire
+            הפסקת שירות
           </button>
         )}
         <button
           type="submit"
           className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-primary"
         >
-          {service ? "Save changes" : "Add service"}
+          {service ? "שמירת שינויים" : "הוספת שירות"}
         </button>
       </div>
     </form>

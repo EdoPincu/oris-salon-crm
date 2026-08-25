@@ -129,7 +129,9 @@ describe("client booking end to end", () => {
       p_full_name: "E2E Tester",
     });
     expect(error).not.toBeNull();
-    expect(error!.message).toMatch(/no longer available|just took/i);
+    // Matched on the Postgres error CODE, not message text, so this test
+    // doesn't care what language book_appointment() raises in.
+    expect(error!.code).toBe("23P01");
   });
 
   it("rejects a slot outside working hours", async () => {
@@ -155,7 +157,9 @@ describe("client booking end to end", () => {
       p_full_name: "E2E Tester",
     });
     expect(error).not.toBeNull();
-    expect(error!.message).toMatch(/too soon|no longer available/i);
+    // Lead-time violations raise 22023 in book_appointment(), independent
+    // of the message language.
+    expect(error!.code).toBe("22023");
   });
 
   it("shows the client their own appointment and nobody else's", async () => {

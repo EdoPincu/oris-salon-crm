@@ -27,16 +27,16 @@ export default async function ClientsPage({
     <div className="max-w-4xl space-y-8">
       <header className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl">Clients</h1>
+          <h1 className="text-3xl">לקוחות</h1>
           <p className="mt-1 text-on-surface-variant">
-            {clients?.length ?? 0} on the books
+            {clients?.length ?? 0} לקוחות רשומים
           </p>
         </div>
         <form className="w-64">
           <input
             name="q"
             defaultValue={q ?? ""}
-            placeholder="Search name, phone, email"
+            placeholder="חיפוש לפי שם, טלפון או אימייל"
             className="input"
           />
         </form>
@@ -44,8 +44,8 @@ export default async function ClientsPage({
 
       {!clients?.length ? (
         <EmptyState
-          title={q ? `No one matches “${q}”.` : "No clients yet."}
-          hint={q ? undefined : "Add your first client below."}
+          title={q ? `לא נמצאו תוצאות עבור "${q}".` : "עדיין אין לקוחות."}
+          hint={q ? undefined : "הוסיפו את הלקוח/ה הראשונה למטה."}
         />
       ) : (
         <ul className="divide-y divide-outline-variant rounded-lg border border-outline-variant bg-surface-lowest">
@@ -69,7 +69,7 @@ export default async function ClientsPage({
       )}
 
       <section className="rounded-lg border border-outline-variant bg-surface-low p-5">
-        <h2 className="mb-4 text-xl">Add a client</h2>
+        <h2 className="mb-4 text-xl">הוספת לקוח/ה</h2>
         <ClientForm />
       </section>
     </div>

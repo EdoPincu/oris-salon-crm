@@ -20,19 +20,19 @@ export default async function SettingsPage() {
     supabase.from("staff").select("*").order("sort_order").order("display_name"),
   ]);
 
-  if (!settings) return <p>Settings row missing.</p>;
+  if (!settings) return <p>שורת ההגדרות חסרה.</p>;
 
   return (
     <div className="max-w-3xl space-y-10">
       <header>
-        <h1 className="text-3xl">Settings</h1>
+        <h1 className="text-3xl">הגדרות</h1>
       </header>
 
       <form action={saveSettings} className="space-y-6">
         <section className="rounded-lg border border-outline-variant bg-surface-lowest p-5">
-          <h2 className="mb-4 text-xl">Salon</h2>
+          <h2 className="mb-4 text-xl">הסלון</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Name shown to clients">
+            <Field label="שם המוצג ללקוחות">
               <input
                 name="display_name"
                 required
@@ -40,14 +40,14 @@ export default async function SettingsPage() {
                 className="input"
               />
             </Field>
-            <Field label="Timezone">
+            <Field label="אזור זמן">
               <select name="timezone" defaultValue={settings.timezone} className="input">
                 {TIMEZONES.map((tz) => (
                   <option key={tz} value={tz}>{tz}</option>
                 ))}
               </select>
             </Field>
-            <Field label="Currency">
+            <Field label="מטבע">
               <select name="currency" defaultValue={settings.currency} className="input">
                 {CURRENCIES.map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -58,9 +58,9 @@ export default async function SettingsPage() {
         </section>
 
         <section className="rounded-lg border border-outline-variant bg-surface-lowest p-5">
-          <h2 className="mb-4 text-xl">Online booking</h2>
+          <h2 className="mb-4 text-xl">הזמנה מקוונת</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Minimum notice (hours)">
+            <Field label="התראה מינימלית (שעות)">
               <input
                 name="booking_lead_hours"
                 type="number"
@@ -69,7 +69,7 @@ export default async function SettingsPage() {
                 className="input"
               />
             </Field>
-            <Field label="How far ahead clients can book (days)">
+            <Field label="עד כמה זמן קדימה ניתן להזמין (ימים)">
               <input
                 name="booking_horizon_days"
                 type="number"
@@ -78,7 +78,7 @@ export default async function SettingsPage() {
                 className="input"
               />
             </Field>
-            <Field label="Slot spacing (minutes)">
+            <Field label="מרווח בין תורים (דקות)">
               <input
                 name="slot_granularity_minutes"
                 type="number"
@@ -88,7 +88,7 @@ export default async function SettingsPage() {
                 className="input"
               />
             </Field>
-            <Field label="Refill reminder after (weeks)">
+            <Field label="תזכורת מילוי אחרי (שבועות)">
               <input
                 name="refill_interval_weeks"
                 type="number"
@@ -107,9 +107,9 @@ export default async function SettingsPage() {
               className="mt-1"
             />
             <span>
-              Confirm online bookings automatically
+              אישור אוטומטי של הזמנות מקוונות
               <span className="block text-on-surface-variant">
-                Leave this off and requests wait on your dashboard for approval.
+                השאירו כבוי כדי שבקשות ימתינו ללוח הבקרה שלכם לאישור.
               </span>
             </span>
           </label>
@@ -119,7 +119,7 @@ export default async function SettingsPage() {
           type="submit"
           className="rounded-md bg-primary px-5 py-2.5 font-medium text-on-primary"
         >
-          Save settings
+          שמירת הגדרות
         </button>
       </form>
 

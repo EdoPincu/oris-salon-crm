@@ -7,11 +7,11 @@ const STYLES: Record<string, string> = {
 };
 
 const LABELS: Record<string, string> = {
-  pending: "Pending",
-  confirmed: "Confirmed",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  no_show: "No show",
+  pending: "ממתין לאישור",
+  confirmed: "מאושר",
+  completed: "הושלם",
+  cancelled: "בוטל",
+  no_show: "לא הגיע/ה",
 };
 
 export function StatusChip({ status }: { status: string }) {

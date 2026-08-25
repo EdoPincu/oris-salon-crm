@@ -16,7 +16,7 @@ export default async function RemindersPage() {
     ]);
 
   const tz = settings?.timezone ?? "Asia/Jerusalem";
-  const salon = settings?.display_name ?? "the salon";
+  const salon = settings?.display_name ?? "הסלון";
 
   const dueRows = (refill ?? []).map((r) => ({
     id: r.client_id,
@@ -26,9 +26,9 @@ export default async function RemindersPage() {
     weeks: r.weeks_since,
     usual: r.usual_service,
     message:
-      `Hi ${r.full_name.split(/\s+/)[0]}! It's been ${r.weeks_since} weeks since your last ` +
-      `${r.usual_service ?? "appointment"} — would you like to book your next one? ` +
-      `Just let me know what day suits. — ${salon}`,
+      `היי ${r.full_name.split(/\s+/)[0]}! עברו כבר ${r.weeks_since} שבועות מאז ` +
+      `${r.usual_service ?? "התור"} האחרון שלך — רוצה לקבוע את הבא? ` +
+      `תכתבי לי איזה יום מתאים לך. — ${salon}`,
   }));
 
   const lapsedRows = (lapsed ?? []).map((r) => ({
@@ -39,29 +39,29 @@ export default async function RemindersPage() {
     weeks: r.weeks_since,
     usual: null,
     message:
-      `Hi ${r.full_name.split(/\s+/)[0]}! We haven't seen you in a while and wanted to ` +
-      `say hello. If you'd like to come in, just let me know. — ${salon}`,
+      `היי ${r.full_name.split(/\s+/)[0]}! מזמן לא ראינו אותך ורצינו לומר שלום. ` +
+      `אם בא לך לבוא, רק תכתבי לי. — ${salon}`,
   }));
 
   return (
     <div className="max-w-5xl space-y-10">
       <header>
-        <h1 className="text-3xl">Follow-ups</h1>
+        <h1 className="text-3xl">מעקבים</h1>
         <p className="mt-1 text-on-surface-variant">
-          Clients worth a message. Copy the text and send it from your own phone.
+          לקוחות ששווה לשלוח להם הודעה. העתיקו את הטקסט ושלחו מהטלפון שלכם.
         </p>
       </header>
 
       <section>
-        <h2 className="mb-1 text-xl">Due for a refill</h2>
+        <h2 className="mb-1 text-xl">ממתינים למילוי</h2>
         <p className="mb-3 text-sm text-on-surface-variant">
-          Last visit over {settings?.refill_interval_weeks ?? 3} weeks ago, with
-          nothing booked.
+          הביקור האחרון היה לפני יותר מ-{settings?.refill_interval_weeks ?? 3} שבועות,
+          ואין תור עתידי.
         </p>
         {dueRows.length === 0 ? (
           <EmptyState
-            title="Nobody is overdue."
-            hint="This fills up as visits are completed."
+            title="אין כרגע מי שמאחר/ת."
+            hint="הרשימה תתמלא ככל שביקורים יושלמו."
           />
         ) : (
           <FollowUpTable rows={dueRows} />
@@ -69,12 +69,12 @@ export default async function RemindersPage() {
       </section>
 
       <section>
-        <h2 className="mb-1 text-xl">Haven&apos;t been in a while</h2>
+        <h2 className="mb-1 text-xl">לא ביקרו כבר זמן מה</h2>
         <p className="mb-3 text-sm text-on-surface-variant">
-          Clients who have drifted away entirely.
+          לקוחות שכבר לא חוזרים.
         </p>
         {lapsedRows.length === 0 ? (
-          <EmptyState title="No lapsed clients." />
+          <EmptyState title="אין לקוחות שנעלמו." />
         ) : (
           <FollowUpTable rows={lapsedRows} />
         )}

@@ -25,7 +25,7 @@ export function PendingRequest({
       <div className="font-medium">{clientName}</div>
       <div className="text-sm text-on-surface-variant">{when}</div>
       <div className="mt-1 text-sm">
-        {services.join(", ") || "No services"} · {total}
+        {services.join(", ") || "ללא שירותים"} · {total}
       </div>
       {phone && <div className="text-sm text-outline">{phone}</div>}
 
@@ -35,14 +35,14 @@ export function PendingRequest({
           onClick={() => start(() => void setAppointmentStatus(id, "confirmed"))}
           className="rounded-md bg-primary px-3 py-1.5 text-sm text-on-primary disabled:opacity-60"
         >
-          Approve
+          אישור
         </button>
         <button
           disabled={pending}
           onClick={() => start(() => void setAppointmentStatus(id, "cancelled"))}
           className="rounded-md border border-outline-variant px-3 py-1.5 text-sm disabled:opacity-60"
         >
-          Decline
+          דחייה
         </button>
       </div>
     </li>

@@ -5,9 +5,30 @@ import {
   addDays,
   weekRange,
   dayRange,
+  formatDateLong,
 } from "@/lib/time";
 
 const TZ = "Europe/Berlin";
+
+// Guards for the Hebrew/RTL conversion: ymdInZone and the other machine
+// formatters in lib/time.ts must stay en-CA/en-US no matter what locale the
+// display formatters use, since their output is parsed as data (slot
+// lookups, calendar grid placement) rather than shown to anyone. See
+// AGENTS.md "Security" section and the note on lib/time.ts's he-IL block.
+describe("ymdInZone stays machine-format under a Hebrew UI", () => {
+  it("returns plain ASCII digits, not Hebrew-formatted output", () => {
+    const ymd = ymdInZone(new Date("2026-07-15T09:00:00Z"), TZ);
+    expect(ymd).toBe("2026-07-15");
+    expect(ymd).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe("formatDateLong is Hebrew, by contrast", () => {
+  it("renders a Hebrew weekday and month name", () => {
+    const s = formatDateLong("2026-07-15T09:00:00Z", TZ);
+    expect(s).toMatch(/[֐-׿]/); // contains a Hebrew character
+  });
+});
 
 describe("zonedStartOfDay", () => {
   it("returns local midnight in winter (UTC+1)", () => {

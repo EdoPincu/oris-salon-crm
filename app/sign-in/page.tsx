@@ -10,13 +10,13 @@ function SignIn() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5">
-      <h1 className="mb-2 text-3xl">Ori&apos;s Salon</h1>
+      <h1 className="mb-2 text-3xl">הסלון של אורי</h1>
       <p className="mb-8 text-on-surface-variant">
-        Sign in with your email — no password needed.
+        התחברות עם כתובת אימייל — בלי סיסמה.
       </p>
 
       <OtpForm
-        submitLabel="Sign in"
+        submitLabel="התחברות"
         onVerified={() => {
           router.replace(params.get("next") ?? "/dashboard");
           router.refresh();

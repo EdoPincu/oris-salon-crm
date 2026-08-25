@@ -55,7 +55,7 @@ export default async function ClientDetail({
     <div className="max-w-4xl space-y-8">
       <div>
         <Link href="/clients" className="text-sm text-on-surface-variant hover:underline">
-          ← All clients
+          ← כל הלקוחות
         </Link>
       </div>
 
@@ -66,36 +66,36 @@ export default async function ClientDetail({
         <div className="flex-1">
           <h1 className="text-3xl">{client.full_name}</h1>
           <p className="mt-1 text-on-surface-variant">
-            {[client.phone, client.email].filter(Boolean).join(" · ") || "No contact details"}
+            {[client.phone, client.email].filter(Boolean).join(" · ") || "אין פרטי קשר"}
           </p>
         </div>
       </header>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat label="Visits" value={String(completed.length)} />
-        <Stat label="Lifetime spend" value={formatMoney(lifetime, currency)} />
+        <Stat label="ביקורים" value={String(completed.length)} />
+        <Stat label="סה״כ הוצאה" value={formatMoney(lifetime, currency)} />
         <Stat
-          label="Last visit"
+          label="ביקור אחרון"
           value={completed[0] ? formatDate(completed[0].starts_at, tz) : "—"}
         />
         <Stat
-          label="Next appointment"
+          label="התור הבא"
           value={upcoming[0] ? formatDate(upcoming[0].starts_at, tz) : "—"}
         />
       </div>
 
       {client.allergies && (
         <div className="rounded-lg border border-error bg-error-container px-4 py-3 text-on-error-container">
-          <strong className="text-sm uppercase tracking-wide">Allergies</strong>
+          <strong className="text-sm uppercase tracking-wide">אלרגיות</strong>
           <p className="mt-1">{client.allergies}</p>
         </div>
       )}
 
       <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr]">
         <section>
-          <h2 className="mb-3 text-xl">Visit history</h2>
+          <h2 className="mb-3 text-xl">היסטוריית ביקורים</h2>
           {all.length === 0 ? (
-            <EmptyState title="No appointments yet." />
+            <EmptyState title="עדיין אין פגישות." />
           ) : (
             <ul className="divide-y divide-outline-variant rounded-lg border border-outline-variant bg-surface-lowest">
               {all.map((v) => {
@@ -131,19 +131,19 @@ export default async function ClientDetail({
         </section>
 
         <section>
-          <h2 className="mb-3 text-xl">Notes</h2>
+          <h2 className="mb-3 text-xl">הערות</h2>
           <div className="rounded-lg border border-outline-variant bg-surface-lowest p-4">
             {client.notes ? (
               <p className="whitespace-pre-wrap text-sm">{client.notes}</p>
             ) : (
-              <p className="text-sm text-outline">Nothing noted yet.</p>
+              <p className="text-sm text-outline">עדיין לא נרשמו הערות.</p>
             )}
           </div>
         </section>
       </div>
 
       <section className="rounded-lg border border-outline-variant bg-surface-low p-5">
-        <h2 className="mb-4 text-xl">Edit details</h2>
+        <h2 className="mb-4 text-xl">עריכת פרטים</h2>
         <ClientForm client={client} />
       </section>
     </div>
