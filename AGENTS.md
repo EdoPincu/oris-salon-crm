@@ -5,11 +5,30 @@ See README.md for setup and the first-run steps.
 
 ## Conventions
 
-- **The salon is in Israel**: `Asia/Jerusalem`, shekels, and weeks that run
-  **Sunday to Saturday**. `weekRange()` returns `weekStart` (a Sunday); the
-  working-hours editor lists Sunday first. Money formats with the `en-IL`
-  locale, which renders ILS as a plain `₪45.00` — `he-IL` wraps it in RTL
-  marks that read badly in this English, left-to-right UI.
+- **The salon is in Israel**: `Asia/Jerusalem`, shekels, weeks that run
+  **Sunday to Saturday**, and — since the Hebrew/RTL conversion — the whole
+  interface is Hebrew (`lang="he" dir="rtl"` in `app/layout.tsx`). No
+  bilingual toggle; strings are inline, not behind a dictionary layer.
+  `weekRange()` returns `weekStart` (a Sunday); the working-hours editor
+  lists Sunday first. Money formats with the `he-IL` locale — the RTL
+  control marks `he-IL` wraps amounts in are correct now that the UI is
+  itself RTL; it was `en-IL` while the UI was still English/LTR, where those
+  marks read badly. If the UI ever goes bilingual, that reasoning flips back.
+- **Two next/font gotchas from the Hebrew conversion, easy to reintroduce**:
+  - The `--font-heebo` / `--font-frank-ruhl` CSS variables next/font
+    generates are scoped to `<body>` (via its `className`), not `:root`.
+    Referencing `var(--font-heebo)` from `app/globals.css`'s `@theme` block
+    (which resolves at `:root`, an *ancestor* of body) silently resolves to
+    nothing — custom properties don't inherit upward — and the whole app
+    falls back to the system font stack with no error. Reference the
+    literal family name (`"Heebo"`) instead; next/font's `@font-face` rules
+    are injected globally under that name regardless of which element holds
+    the class.
+  - Supabase's OTP length is a **project-level Auth setting**, not a fixed
+    6-digit protocol constant — this project's live config issues 8-digit
+    codes. Don't hardcode a digit count in the OTP input's `maxLength` or in
+    any copy describing it (see `components/otp-form.tsx`'s
+    `MIN_CODE_LENGTH`, and `docs/email-templates/magic-link-otp.md`).
 - **Money is integer cents** everywhere. Format only at the edges, via
   `lib/format.ts`. Never store or compute in floats.
 - **Times are `timestamptz`.** Wall-clock rules (working hours) are `time`

@@ -9,7 +9,10 @@ booking page where clients verify their email and request a slot.
   appointment. Requests arrive as **pending** for the owner to approve.
 
 Stack: Next.js (App Router, TypeScript) · Supabase (Postgres, Auth, RLS) ·
-Tailwind v4. Design system "Serene Elegance", generated with Google Stitch.
+Tailwind v4. Interface is Hebrew, right-to-left (`lang="he" dir="rtl"`).
+Design system "Serene Elegance", generated with Google Stitch — typefaces
+are Frank Ruhl Libre + Heebo (Hebrew-capable; the design's originals,
+Libre Caslon Text + DM Sans, ship no Hebrew glyphs at all).
 
 ## Setup
 
@@ -27,8 +30,9 @@ Supabase project: `oris-salon-crm` (ref `xnqrnsailsulchsymfgt`, eu-central-1).
 
 The database starts empty on purpose — no demo data.
 
-1. Open `/sign-in` and sign in with the owner's email (a 6-digit code arrives
-   by email).
+1. Open `/sign-in` and sign in with the owner's email (a numeric code
+   arrives by email — Supabase's configured length for this project is 8
+   digits, not the commonly-assumed 6; the app doesn't hardcode a count).
 2. Make that person the owner:
    ```bash
    npx tsx scripts/promote-owner.ts ori@example.com
@@ -43,10 +47,13 @@ hours exist.
 
 ### Email delivery
 
-Supabase's built-in sender is rate-limited to a few messages an hour on the
-free tier, which you will hit while testing sign-in. Point Supabase at a real
-SMTP provider (Resend's free tier is 100/day) under
-*Authentication → Emails → SMTP Settings* in the dashboard.
+Supabase's built-in sender is rate-limited to 2 emails/hour project-wide,
+which you will hit immediately while testing sign-in. **Use Gmail SMTP, not
+Resend** — Resend refuses to deliver to anyone but the account owner until a
+custom domain is verified, and this salon has none; wiring it up as-is would
+let the owner sign in while silently breaking sign-in for every client. Full
+setup steps, exact dashboard values, and the Hebrew email template are in
+[`docs/EMAIL-SETUP.md`](docs/EMAIL-SETUP.md).
 
 ## Database
 
@@ -82,14 +89,16 @@ rewrites past revenue.
 npm run test
 ```
 
-35 tests, run against the live Supabase project with their own fixtures
+40 tests, run against the live Supabase project with their own fixtures
 (cleaned up afterwards):
 
 - `tests/booking.test.ts` — slot generation: granularity, service durations,
   existing appointments, time off, lead time, horizon, and the double-booking
   constraint.
 - `tests/time.test.ts` — timezone maths across DST, including 23- and 25-hour
-  days and half-hour offsets.
+  days and half-hour offsets; plus two guards from the Hebrew conversion —
+  `ymdInZone()` still returns plain ASCII digits (never localized, since its
+  output is parsed as data), and `formatDateLong()` does render Hebrew.
 - `tests/e2e-booking.test.ts` — a real client booking end to end, plus the RLS
   boundaries: clients cannot read other clients, cannot see payments, cannot
   confirm their own appointment, and cannot promote themselves to owner.
