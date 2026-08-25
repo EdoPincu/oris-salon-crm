@@ -47,3 +47,6 @@ next-env.d.ts
 stitch_key.env
 .DS_Store
 .stitch-key
+
+# Local Netlify folder
+.netlify
