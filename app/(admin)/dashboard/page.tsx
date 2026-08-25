@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { dayRange, weekRange, formatTime, formatDateLong } from "@/lib/time";
+import { dayRange, formatTime, formatDateLong } from "@/lib/time";
 import { formatMoney } from "@/lib/format";
 import { StatusChip } from "@/components/status-chip";
 import { EmptyState } from "@/components/empty-state";
@@ -16,9 +16,8 @@ export default async function DashboardPage() {
   const currency = settings?.currency ?? "ILS";
   const now = new Date();
   const today = dayRange(now, tz);
-  const week = weekRange(now, tz);
 
-  const [todayRes, pendingRes, payRes, refillRes] = await Promise.all([
+  const [todayRes, pendingRes, refillRes] = await Promise.all([
     supabase
       .from("appointments")
       .select("id, starts_at, ends_at, status, clients(full_name), appointment_services(name)")
@@ -31,24 +30,11 @@ export default async function DashboardPage() {
       .select("id, starts_at, ends_at, clients(full_name, phone), appointment_services(name, price_cents)")
       .eq("status", "pending")
       .order("starts_at"),
-    // Bounded on the appointment's starts_at, not the payment's paid_at, so
-    // this figure means the same thing as /reports' week panel — a payment
-    // recorded today for an appointment earlier in the week counts toward
-    // that earlier day, not toward whenever the owner got around to it.
-    supabase
-      .from("payments")
-      .select("amount_cents, tip_cents, appointments!inner(starts_at)")
-      .gte("appointments.starts_at", week.start.toISOString())
-      .lt("appointments.starts_at", week.end.toISOString()),
     supabase.rpc("clients_due_for_refill"),
   ]);
 
   const todays = todayRes.data ?? [];
   const pending = pendingRes.data ?? [];
-  const revenue = (payRes.data ?? []).reduce(
-    (sum, p) => sum + p.amount_cents + p.tip_cents,
-    0,
-  );
   const refillCount = refillRes.data?.length ?? null;
 
   return (
@@ -60,9 +46,8 @@ export default async function DashboardPage() {
         </p>
       </header>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         <Stat label="פגישות היום" value={String(todays.length)} />
-        <Stat label="הכנסות השבוע" value={formatMoney(revenue, currency)} />
         <Stat label="בקשות ממתינות" value={String(pending.length)} />
         <Stat
           label="ממתינים למילוי"
