@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { weekRange, zonedStartOfDay, addDays, ymdInZone, formatTime } from "@/lib/time";
+import { weekRange, zonedStartOfDay, addDays, ymdInZone, formatTime, formatYmd, isValidYmd } from "@/lib/time";
 import { EmptyState } from "@/components/empty-state";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ export default async function CalendarPage({
     .single();
   const tz = settings?.timezone ?? "Asia/Jerusalem";
 
-  const anchor = weekParam
+  const anchor = weekParam && isValidYmd(weekParam)
     ? zonedStartOfDay(weekParam, tz)
     : new Date();
   const week = weekRange(anchor, tz);
@@ -54,13 +54,9 @@ export default async function CalendarPage({
         <div>
           <h1 className="text-3xl">יומן</h1>
           <p className="mt-1 text-on-surface-variant">
-            {new Date(`${week.weekStart}T12:00:00Z`).toLocaleDateString("he-IL", {
-              day: "numeric", month: "long", timeZone: "UTC",
-            })}{" "}
-            –{" "}
-            {new Date(`${addDays(week.weekStart, 6)}T12:00:00Z`).toLocaleDateString("he-IL", {
-              day: "numeric", month: "long", year: "numeric", timeZone: "UTC",
-            })}
+            {formatYmd(week.weekStart, { day: "numeric", month: "long" })}
+            {" – "}
+            {formatYmd(addDays(week.weekStart, 6), { day: "numeric", month: "long", year: "numeric" })}
           </p>
         </div>
         <div className="flex gap-2">
@@ -93,7 +89,6 @@ export default async function CalendarPage({
         <div className="grid min-w-[900px] grid-cols-[4rem_repeat(7,1fr)]">
           <div className="border-b border-outline-variant bg-surface-low" />
           {dayYmds.map((d) => {
-            const dt = new Date(`${d}T12:00:00Z`);
             const isToday = d === todayYmd;
             return (
               <div
@@ -103,9 +98,9 @@ export default async function CalendarPage({
                 }`}
               >
                 <div className="text-xs uppercase text-on-surface-variant">
-                  {dt.toLocaleDateString("he-IL", { weekday: "short", timeZone: "UTC" })}
+                  {formatYmd(d, { weekday: "short" })}
                 </div>
-                <div className="font-display text-lg">{dt.getUTCDate()}</div>
+                <div className="font-display text-lg">{formatYmd(d, { day: "numeric" })}</div>
               </div>
             );
           })}
