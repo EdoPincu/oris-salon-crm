@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { formatMoney, formatDuration } from "@/lib/format";
-import { OtpForm } from "@/components/otp-form";
 import { ymdInZone, addDays, formatTime, formatDateLong } from "@/lib/time";
 
 type Service = {
@@ -27,6 +26,8 @@ export function BookingWizard({
   autoConfirm,
   services,
   staff,
+  defaultName,
+  defaultPhone,
 }: {
   salonName: string;
   currency: string;
@@ -35,6 +36,9 @@ export function BookingWizard({
   autoConfirm: boolean;
   services: Service[];
   staff: Staff[];
+  /** Prefilled from the client's existing record, empty for a first booking. */
+  defaultName: string;
+  defaultPhone: string;
 }) {
   const supabase = createClient();
 
@@ -44,9 +48,12 @@ export function BookingWizard({
   const [date, setDate] = useState(() => ymdInZone(new Date(), timezone));
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [slot, setSlot] = useState<Slot | null>(null);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [verified, setVerified] = useState(false);
+  const [name, setName] = useState(defaultName);
+  const [phone, setPhone] = useState(defaultPhone);
+  // No `verified` state any more: reaching this page at all proves a verified
+  // session, because app/(public)/book/page.tsx redirects signed-out visitors
+  // to /sign-in. Asking for a second code here was the double-2FA bug.
+  const [confirming, setConfirming] = useState(false);
   const [booked, setBooked] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -91,6 +98,10 @@ export function BookingWizard({
     });
 
     setBusy(false);
+    // Always close the dialog: on success the confirmation screen replaces
+    // it, and on failure the error has to be visible on the form behind it.
+    setConfirming(false);
+
     if (error) {
       setError(error.message);
       // A lost race means the slot list is stale — send them back to pick again.
@@ -343,61 +354,46 @@ export function BookingWizard({
             </div>
           </div>
 
-          {!verified ? (
-            <>
-              <div className="mb-5 space-y-4">
-                <label className="block">
-                  <span className="text-sm font-medium text-on-surface-variant">
-                    שם מלא
-                  </span>
-                  <input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    autoComplete="name"
-                    className="input mt-1"
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-sm font-medium text-on-surface-variant">
-                    טלפון (לא חובה)
-                  </span>
-                  <input
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    autoComplete="tel"
-                    dir="ltr"
-                    className="input mt-1"
-                  />
-                </label>
-              </div>
+          <div className="mb-5 space-y-4">
+            <label className="block">
+              <span className="text-sm font-medium text-on-surface-variant">
+                שם מלא
+              </span>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                autoComplete="name"
+                className="input mt-1"
+              />
+            </label>
+            <label className="block">
+              <span className="text-sm font-medium text-on-surface-variant">
+                טלפון (לא חובה)
+              </span>
+              <input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                autoComplete="tel"
+                dir="ltr"
+                className="input mt-1"
+              />
+            </label>
+          </div>
 
-              {name.trim().length < 2 ? (
-                <p className="text-sm text-on-surface-variant">
-                  הזינו שם כדי להמשיך.
-                </p>
-              ) : (
-                <OtpForm
-                  metadata={{ full_name: name.trim(), phone: phone.trim() }}
-                  submitLabel="אימות אימייל"
-                  onVerified={() => setVerified(true)}
-                />
-              )}
-            </>
+          {name.trim().length < 2 ? (
+            <p className="text-sm text-on-surface-variant">
+              הזינו שם כדי להמשיך.
+            </p>
           ) : (
-            <>
-              <p className="mb-4 rounded-md bg-secondary-container px-3 py-2 text-sm text-on-secondary-container">
-                האימייל אומת.
-              </p>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={confirmBooking}
-                className="w-full rounded-md bg-primary px-4 py-3 font-medium text-on-primary disabled:opacity-60"
-              >
-                {busy ? "קובעים תור…" : "אישור התור"}
-              </button>
-            </>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => setConfirming(true)}
+              className="w-full rounded-md bg-primary px-4 py-3 font-medium text-on-primary disabled:opacity-60"
+            >
+              {busy ? "קובעים תור…" : "אישור התור"}
+            </button>
           )}
 
           <button
@@ -407,9 +403,136 @@ export function BookingWizard({
           >
             חזרה
           </button>
+
+          {confirming && (
+            <ConfirmDialog
+              busy={busy}
+              onCancel={() => setConfirming(false)}
+              onConfirm={confirmBooking}
+            >
+              <Row label="שירותים" value={selected.map((s) => s.name).join(", ")} />
+              <Row label="תאריך" value={formatDateLong(slot!.slot_start, timezone)} />
+              <Row
+                label="שעה"
+                value={`${formatTime(slot!.slot_start, timezone)} – ${formatTime(slot!.slot_end, timezone)}`}
+              />
+              <Row label="משך" value={formatDuration(totalMins)} />
+              <Row label="שם" value={name.trim()} />
+              {phone.trim() && <Row label="טלפון" value={phone.trim()} ltr />}
+              <Row label="סה״כ" value={formatMoney(totalPrice, currency)} emphasis />
+            </ConfirmDialog>
+          )}
         </>
       )}
     </Shell>
+  );
+}
+
+function Row({
+  label,
+  value,
+  ltr,
+  emphasis,
+}: {
+  label: string;
+  value: string;
+  ltr?: boolean;
+  emphasis?: boolean;
+}) {
+  return (
+    <div
+      className={`flex justify-between gap-4 py-1.5 text-sm ${
+        emphasis
+          ? "mt-1 border-t border-outline-variant pt-2.5 font-medium"
+          : ""
+      }`}
+    >
+      <span className="shrink-0 text-on-surface-variant">{label}</span>
+      <span className="text-end" dir={ltr ? "ltr" : undefined}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Last screen before a real commitment, so it's worth being a proper dialog:
+ * Escape closes it, focus moves inside on open and returns to the trigger on
+ * close, and a click on the backdrop cancels.
+ */
+function ConfirmDialog({
+  busy,
+  onCancel,
+  onConfirm,
+  children,
+}: {
+  busy: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+  children: React.ReactNode;
+}) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    panelRef.current?.focus();
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && !busy) onCancel();
+    }
+    document.addEventListener("keydown", onKeyDown);
+
+    // The page behind scrolls under the dialog otherwise.
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previouslyFocused?.focus?.();
+    };
+  }, [busy, onCancel]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-inverse-surface/40 px-5"
+      onClick={() => !busy && onCancel()}
+    >
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-title"
+        tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm rounded-xl border border-outline-variant bg-surface-lowest p-5 shadow-lg outline-none"
+      >
+        <h2 id="confirm-title" className="mb-4 text-xl">
+          לאשר את פרטי ההזמנה?
+        </h2>
+
+        <div className="mb-5">{children}</div>
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={busy}
+            className="flex-1 rounded-md border border-outline-variant px-4 py-2.5 text-sm disabled:opacity-60"
+          >
+            חזרה לעריכה
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={busy}
+            className="flex-1 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-on-primary disabled:opacity-60"
+          >
+            {busy ? "קובעים תור…" : "אישור"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
