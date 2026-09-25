@@ -131,7 +131,7 @@ export function BookingWizard({
           <p className="mb-6 text-on-surface-variant">
             {autoConfirm
               ? "שמרנו את התור. נתראה בקרוב!"
-              : `${salonName} יאשרו את הבקשה בקרוב — אפשר לעקוב אחרי הסטטוס בעמוד "התורים שלי".`}
+              : 'שים לב: הפגישה שלך טרם אושרה סופית. יש להתעדכן בעמוד "התורים שלי" כדי לדעת אם אושרה.'}
           </p>
 
           <div className="mb-6 rounded-lg border border-outline-variant bg-surface-lowest p-4 text-start">
