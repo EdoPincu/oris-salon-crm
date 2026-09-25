@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { sendMail } from "@/lib/notify/mailer";
+import { bookingApproved } from "@/lib/notify/booking-approved";
 
 async function ownerClient() {
   const supabase = await createClient();
@@ -25,6 +27,17 @@ export async function setAppointmentStatus(
   status: "confirmed" | "cancelled" | "completed" | "no_show",
 ) {
   const supabase = await ownerClient();
+
+  // Read before writing: the notification below depends on what the status
+  // *was*, which the update itself destroys.
+  const { data: before } = await supabase
+    .from("appointments")
+    .select(
+      "status, source, starts_at, clients(full_name, email), appointment_services(name, price_cents)",
+    )
+    .eq("id", id)
+    .single();
+
   const { error } = await supabase
     .from("appointments")
     .update({ status })
@@ -34,6 +47,69 @@ export async function setAppointmentStatus(
   revalidatePath("/dashboard");
   revalidatePath("/calendar");
   revalidatePath(`/appointments/${id}`);
+
+  if (before?.status === "pending" && status === "confirmed") {
+    await notifyBookingApproved(supabase, before);
+  }
+}
+
+/**
+ * Tells a client their online booking request was approved — the email
+ * app/(public)/book/wizard.tsx promises them on the confirmation screen.
+ *
+ * Only ever called for a pending -> confirmed transition, which is what makes
+ * it idempotent: pressing "אישור" twice can't send twice, because the second
+ * press no longer sees a pending appointment. There is no UI that moves a
+ * confirmed appointment back to pending.
+ *
+ * Best-effort by design. The appointment is already confirmed and committed
+ * by the time this runs; a dead SMTP connection must never undo that or
+ * surface as a failure to the owner, so everything here is swallowed.
+ */
+type ApprovedRow = {
+  source: string;
+  starts_at: string;
+  clients: { full_name: string; email: string | null } | null;
+  appointment_services: { name: string; price_cents: number }[];
+};
+
+async function notifyBookingApproved(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  appt: ApprovedRow,
+) {
+  try {
+    // Only online bookings were promised an email. An appointment the owner
+    // entered by hand shouldn't mail the client out of nowhere.
+    if (appt.source !== "online") return;
+
+    // clients.email is nullable. book_appointment() fills it, but only when
+    // it creates the client row — someone the owner had already entered by
+    // hand and who was later matched by profile_id can still have none.
+    const to = appt.clients?.email;
+    if (!to) {
+      console.warn("[mail] booking approved but the client has no email on file");
+      return;
+    }
+
+    const { data: settings } = await supabase
+      .from("settings")
+      .select("display_name, timezone, currency")
+      .single();
+
+    await sendMail({
+      to,
+      ...bookingApproved({
+        salonName: settings?.display_name ?? "הסלון",
+        clientName: appt.clients?.full_name ?? "",
+        startsAt: appt.starts_at,
+        timezone: settings?.timezone ?? "Asia/Jerusalem",
+        currency: settings?.currency ?? "ILS",
+        services: appt.appointment_services,
+      }),
+    });
+  } catch (error) {
+    console.error("[mail] booking-approved notification failed:", error);
+  }
 }
 
 export async function recordPayment(formData: FormData) {

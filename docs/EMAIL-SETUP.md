@@ -94,3 +94,73 @@ While that email is open, also confirm:
   configuration issued an **8-digit** code during testing (verified by
   generating and using a real one). The app's OTP input doesn't hardcode a
   digit count for exactly this reason — see `components/otp-form.tsx`.
+
+---
+
+# The app's own SMTP — a second, separate configuration
+
+Everything above configures **Supabase Auth's** SMTP, which sends sign-in
+codes. The app cannot reach that connection: it lives inside Supabase and
+only ever sends auth email.
+
+So the "booking approved" notification — the one
+`app/(public)/book/wizard.tsx` promises the client on the confirmation
+screen — needs its **own** SMTP credentials, set as environment variables on
+the host. Today both point at the same Gmail mailbox; they are still two
+independent configurations, and changing one does not change the other.
+
+## Variables
+
+Deliberately generic rather than Gmail-shaped, so moving to a salon mailbox,
+a domain address, or a transactional provider is a config change with **no
+code edit**:
+
+| Variable | Value today | Notes |
+|---|---|---|
+| `SMTP_HOST` | `smtp.gmail.com` | |
+| `SMTP_PORT` | `465` | |
+| `SMTP_SECURE` | `true` | Optional — defaults to `true` for port 465, `false` otherwise |
+| `SMTP_USER` | the Gmail address | Same mailbox as the Supabase SMTP user |
+| `SMTP_PASSWORD` | a Gmail **App Password** | The same one, or a second one generated for the app |
+| `MAIL_FROM` | `הסלון של אורי <address>` | Optional — falls back to `SMTP_USER` |
+
+Set them on Railway **via stdin**, so no secret ever appears in shell history
+or in a process list:
+
+```bash
+printf '%s' 'smtp.gmail.com' | railway variable set SMTP_HOST --stdin --service nailshop
+printf '%s' '<app password>'  | railway variable set SMTP_PASSWORD --stdin --service nailshop
+```
+
+## Behaviour when it isn't configured
+
+`lib/notify/mailer.ts` treats missing config as a no-op: it logs a warning
+and returns `false`. It never throws. Local development, the test suite and
+any environment without SMTP keep working — approving an appointment simply
+doesn't email anyone. This is deliberate: the appointment is already
+confirmed and committed by the time the mail is attempted, and a refused
+SMTP connection must never undo that or surface as an error to the owner.
+
+## When the email is sent
+
+Only on a **pending → confirmed** transition of an appointment whose
+`source` is `online`, and only when the client has an email on file.
+
+- Gating on the *previous* status is what makes it idempotent — pressing
+  אישור twice can't send twice, because the second press no longer sees a
+  pending appointment.
+- The `online` check keeps appointments the owner entered by hand from
+  mailing clients unexpectedly. The promise only ever appears in the online
+  booking wizard.
+- `clients.email` is nullable. `book_appointment()` populates it, but only
+  when it creates the client row — a client the owner had already entered by
+  hand, later matched by `profile_id`, can have none. The send is skipped
+  and logged.
+
+## Moving off the personal Gmail
+
+This is a handover prerequisite, and the variables above are why it's cheap:
+create the salon mailbox, generate an App Password, update `SMTP_USER` /
+`SMTP_PASSWORD` / `MAIL_FROM` on the host, and update the Supabase Auth SMTP
+settings separately. No deploy, no code change — though note the app reads
+these at send time, so a Railway variable change does restart the service.
