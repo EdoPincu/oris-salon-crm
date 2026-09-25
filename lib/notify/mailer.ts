@@ -85,12 +85,21 @@ export async function sendMail(mail: Mail): Promise<boolean> {
   }
 
   try {
-    await tx.sendMail({
+    const info = await tx.sendMail({
       from: process.env.MAIL_FROM ?? process.env.SMTP_USER,
       to: mail.to,
       subject: mail.subject,
       html: mail.html,
     });
+    // Log success as well as failure. While debugging the IPv6 problem, a
+    // silent success and a send that never happened produced identical
+    // logs — the only way to tell them apart was to reason about which
+    // container a given approval had landed on. One line removes that.
+    // The accepted/rejected split comes from the SMTP server, so this also
+    // catches a message the relay takes but refuses to deliver.
+    console.log(
+      `[mail] sent "${mail.subject}" — accepted=${info.accepted?.length ?? 0} rejected=${info.rejected?.length ?? 0}`,
+    );
     return true;
   } catch (error) {
     console.error(`[mail] failed to send "${mail.subject}":`, error);
