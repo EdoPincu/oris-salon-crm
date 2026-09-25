@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { OwnerReturnLink } from "@/components/owner-return-link";
 import { BookingWizard } from "./wizard";
 
 export const dynamic = "force-dynamic";
@@ -54,16 +55,24 @@ export default async function BookPage() {
   }
 
   return (
-    <BookingWizard
-      salonName={settings!.display_name}
-      currency={settings!.currency}
-      timezone={settings!.timezone}
-      horizonDays={settings!.booking_horizon_days}
-      autoConfirm={settings!.auto_confirm_online}
-      services={services!}
-      staff={staff!}
-      defaultName={me?.full_name ?? ""}
-      defaultPhone={me?.phone ?? ""}
-    />
+    <>
+      {/* A slim bar above the wizard rather than an overlay: the wizard owns
+          a fixed bottom bar and a z-50 dialog, so anything floating here
+          would collide with one of them. Renders nothing for a client. */}
+      <div className="mx-auto max-w-lg px-5 pt-4 empty:hidden">
+        <OwnerReturnLink />
+      </div>
+      <BookingWizard
+        salonName={settings!.display_name}
+        currency={settings!.currency}
+        timezone={settings!.timezone}
+        horizonDays={settings!.booking_horizon_days}
+        autoConfirm={settings!.auto_confirm_online}
+        services={services!}
+        staff={staff!}
+        defaultName={me?.full_name ?? ""}
+        defaultPhone={me?.phone ?? ""}
+      />
+    </>
   );
 }

@@ -5,6 +5,7 @@ import { formatMoney } from "@/lib/format";
 import { formatDateLong, formatTime } from "@/lib/time";
 import { StatusChip } from "@/components/status-chip";
 import { EmptyState } from "@/components/empty-state";
+import { OwnerReturnLink } from "@/components/owner-return-link";
 import { CancelButton } from "./cancel-button";
 
 export const dynamic = "force-dynamic";
@@ -40,13 +41,16 @@ export default async function MyAppointments() {
 
   return (
     <main className="mx-auto max-w-lg px-5 py-10">
-      <header className="mb-8 flex items-baseline justify-between">
+      <header className="mb-8 flex items-baseline justify-between gap-4">
         <h1 className="font-display text-2xl text-primary">
           {settings?.display_name ?? "סלון"}
         </h1>
-        <form action="/auth/signout" method="post">
-          <button className="text-sm text-on-surface-variant underline">התנתקות</button>
-        </form>
+        <div className="flex items-baseline gap-4">
+          <OwnerReturnLink />
+          <form action="/auth/signout" method="post">
+            <button className="text-sm text-on-surface-variant underline">התנתקות</button>
+          </form>
+        </div>
       </header>
 
       <h2 className="mb-3 text-xl">קרובים</h2>

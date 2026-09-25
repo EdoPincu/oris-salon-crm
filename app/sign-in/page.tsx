@@ -18,7 +18,11 @@ function SignIn() {
       <OtpForm
         submitLabel="התחברות"
         onVerified={() => {
-          router.replace(params.get("next") ?? "/dashboard");
+          // No explicit destination? /after-sign-in decides by role on the
+          // server — an owner gets the manager app, a client gets their own
+          // appointments. Hardcoding /dashboard here sent everyone to the
+          // manager page and made the landing page's two doors identical.
+          router.replace(params.get("next") ?? "/after-sign-in");
           router.refresh();
         }}
       />

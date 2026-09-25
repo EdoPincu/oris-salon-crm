@@ -32,7 +32,13 @@ export default async function Home() {
         התורים שלי
       </Link>
 
-      <Link href="/sign-in" className="mt-10 text-sm text-on-surface-variant underline">
+      {/* The staff door states its destination rather than relying on the
+          sign-in page's default, so it genuinely differs from the two client
+          doors above. An owner using those still lands on the client side. */}
+      <Link
+        href="/sign-in?next=/dashboard"
+        className="mt-10 text-sm text-on-surface-variant underline"
+      >
         כניסת צוות
       </Link>
     </main>
