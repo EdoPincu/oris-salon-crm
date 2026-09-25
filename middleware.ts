@@ -62,7 +62,12 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
+// Every route group under app/(admin)/. Keep this in step with that folder:
+// a page that lives there but is missing here is protected by RLS alone —
+// it returns notFound() rather than redirecting to sign-in, which is a
+// confusing way to tell someone they need to log in.
 const ADMIN_PREFIXES = [
+  "/appointments",
   "/dashboard",
   "/calendar",
   "/clients",
