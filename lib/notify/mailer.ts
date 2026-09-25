@@ -46,6 +46,13 @@ function readConfig() {
     // ("abcd efgh ijkl mnop") and copying it verbatim is the obvious thing to
     // do, so strip whitespace rather than fail on it.
     auth: { user, pass: pass.replace(/\s/g, "") },
+    // Force IPv4. Node resolves smtp.gmail.com's AAAA record first and tries
+    // IPv6, but Railway's containers have no IPv6 egress, so every send died
+    // with `connect ENETUNREACH 2a00:1450:...:587`. On port 465 the same
+    // failure surfaced as a plain connection timeout, which reads like a
+    // blocked SMTP port and sent this diagnosis the wrong way for a while —
+    // the port was never the problem.
+    family: 4,
   };
 }
 
