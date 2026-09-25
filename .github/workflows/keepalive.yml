@@ -1,0 +1,69 @@
+# Keeps the Supabase project awake.
+#
+# Supabase pauses free-tier projects after ~7 days of inactivity. That is not
+# a graceful degradation: the project hostname stops resolving entirely, so
+# there is no "paused" page — a client just sees a bare `Failed to fetch`
+# inside the Hebrew sign-in form. It has happened once already (2026-09-25),
+# and it stayed broken until somebody noticed.
+#
+# Daily, not weekly, and deliberately so. GitHub does not promise that a
+# `schedule` fires on time, or at all — runs are delayed under load and are
+# sometimes dropped. Pinging every 6 days would leave 24 hours of margin
+# against the 7-day window, so a single missed run would cause exactly the
+# outage this is meant to prevent. Daily leaves six days of slack: five
+# consecutive failures would still be survivable. The cost is the same either
+# way (~8 of 2,000 free monthly minutes).
+name: Supabase keep-alive
+
+on:
+  schedule:
+    # 04:37 UTC. Off the hour on purpose — GitHub's own docs note that
+    # scheduled runs are delayed most at the top of the hour.
+    - cron: "37 4 * * *"
+  # So it can be proven to work now rather than waiting until tomorrow.
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the Supabase REST API
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
+            echo "::error::SUPABASE_URL / SUPABASE_ANON_KEY repo secrets are not set."
+            exit 1
+          fi
+
+          # Hit Supabase directly. Pinging the Railway app would not do:
+          # a static route serves without touching the database at all, so a
+          # green ping could coexist with a project that is pausing anyway.
+          # `settings` is a single-row table readable by anon under RLS.
+          code=$(curl -sS -o /tmp/body.txt -w '%{http_code}' --max-time 30 \
+            "${SUPABASE_URL}/rest/v1/settings?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}")
+
+          echo "HTTP ${code}"
+
+          # Assert, don't assume. A ping that 404s or returns an RLS error is
+          # worse than no ping, because the workflow goes green while the
+          # project quietly pauses. A failed run emails the repo owner, which
+          # is the alerting mechanism.
+          if [ "$code" != "200" ]; then
+            echo "::error::Expected HTTP 200, got ${code}"
+            cat /tmp/body.txt
+            exit 1
+          fi
+
+          # A 200 with a non-array body would mean the shape changed.
+          if ! grep -q '^\[' /tmp/body.txt; then
+            echo "::error::200 but the body was not a JSON array — check the endpoint."
+            cat /tmp/body.txt
+            exit 1
+          fi
+
+          echo "Supabase is awake."
