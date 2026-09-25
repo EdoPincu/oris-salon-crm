@@ -42,7 +42,10 @@ function readConfig() {
     secure: process.env.SMTP_SECURE
       ? process.env.SMTP_SECURE === "true"
       : port === 465,
-    auth: { user, pass },
+    // Google displays an App Password as four space-separated groups
+    // ("abcd efgh ijkl mnop") and copying it verbatim is the obvious thing to
+    // do, so strip whitespace rather than fail on it.
+    auth: { user, pass: pass.replace(/\s/g, "") },
   };
 }
 
