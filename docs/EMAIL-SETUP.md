@@ -132,6 +132,50 @@ printf '%s' 'smtp.gmail.com' | railway variable set SMTP_HOST --stdin --service 
 printf '%s' '<app password>'  | railway variable set SMTP_PASSWORD --stdin --service nailshop
 ```
 
+## Two failure modes that cost real downtime (2026-09-25)
+
+Both produced the same unhelpful Supabase error — `Error sending magic link
+email`, HTTP 500 — and neither is guessable from it.
+
+**1. An App Password is not the account password.** Gmail rejects the Google
+account password for SMTP outright: `534-5.7.9 Application-specific password
+required`. An App Password is **16 lowercase letters**, generated at
+<https://myaccount.google.com/apppasswords> (the page only exists when
+2-Step Verification is on). If the value you have is any other length or
+contains digits or symbols, it is the wrong credential.
+
+**2. Google shows an App Password with spaces — Supabase does not strip
+them.** It is displayed as four groups (`abcd efgh ijkl mnop`) and pasting it
+verbatim is the natural thing to do. Supabase passes the field to Gmail
+unchanged, Gmail sees 19 characters, and authentication fails.
+**Type the 16 characters with no spaces into Supabase's SMTP password
+field.** `lib/notify/mailer.ts` strips whitespace itself, so the app's own
+`SMTP_PASSWORD` tolerates either form — which is precisely how the two were
+told apart: the same password authenticated through the app and failed
+through Supabase.
+
+**And a trap that follows from fixing a leak:** changing the Google **account**
+password **revokes every App Password on the account**. That instantly breaks
+Supabase Auth's SMTP and therefore *all* sign-in, owner and client alike, with
+no warning. If the account password ever has to be rotated, plan to
+regenerate and re-enter the App Password in both places in the same sitting.
+
+### Diagnosing it quickly
+
+Test the credential against Gmail directly rather than guessing from
+Supabase's generic 500 — `nodemailer`'s `transporter.verify()` reports
+Gmail's actual refusal. Then probe the Auth endpoint to confirm the fix:
+
+```bash
+curl -s -X POST "$NEXT_PUBLIC_SUPABASE_URL/auth/v1/otp" \
+  -H "apikey: $NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"someone@example.com","create_user":false}' -w '\n%{http_code}\n'
+```
+
+`200` with `{}` means Supabase accepted and sent it. Note this sends a real
+code to that address.
+
 ## Behaviour when it isn't configured
 
 `lib/notify/mailer.ts` treats missing config as a no-op: it logs a warning
