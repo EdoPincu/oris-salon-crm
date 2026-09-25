@@ -109,6 +109,38 @@ screen — needs its **own** SMTP credentials, set as environment variables on
 the host. Today both point at the same Gmail mailbox; they are still two
 independent configurations, and changing one does not change the other.
 
+## Railway blocks SMTP — the app sends over HTTPS instead
+
+**Railway blocks outbound SMTP on Free, Trial and Hobby plans.** Ports 25,
+465, 587 and 2525 are all firewalled; only Pro and above are exempt. Every
+SMTP send from production therefore dies at TCP connect with `ETIMEDOUT`,
+which looks exactly like a misconfiguration and is not one. See
+<https://docs.railway.com/networking/outbound-networking>.
+
+So the app sends through **Brevo's HTTPS API** (free tier: 300 emails/day, no
+custom domain required). HTTPS cannot be firewalled the way SMTP is.
+
+**This does not affect sign-in.** Supabase Auth's OTP emails are sent by
+*Supabase's* servers using the SMTP settings in the Supabase dashboard, not by
+the app, so Railway's firewall never touches them.
+
+### Brevo setup
+
+1. Create an account at <https://www.brevo.com>.
+2. **Senders, Domains & Dedicated IPs → Senders → Add a sender**: add the
+   address in `MAIL_FROM` and confirm the verification email. Brevo refuses to
+   send from an unverified sender, and says so in the response body — which
+   `lib/notify/mailer.ts` logs.
+3. **SMTP & API → API Keys → Generate a new API key.**
+4. Set it on the host:
+   ```bash
+   printf '%s' '<the key>' | railway variable set BREVO_API_KEY --stdin --service nailshop
+   ```
+
+`BREVO_API_KEY` is what selects the transport: present means HTTPS, absent
+falls back to SMTP. The SMTP variables below are kept for local development
+and for any future host that permits SMTP.
+
 ## Variables
 
 Deliberately generic rather than Gmail-shaped, so moving to a salon mailbox,
