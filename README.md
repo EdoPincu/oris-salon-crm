@@ -95,10 +95,50 @@ any language without breaking the recovery path.
 
 ## Running it locally
 
+Development runs against a **local Supabase stack**, not the hosted project —
+so test bookings, approvals and cancellations can never reach real salon data.
+
 ```bash
 npm install
-npm run dev      # http://localhost:3000
-npm run test     # 40 tests
+npm run db:start   # local Supabase (needs Docker Desktop running)
+npm run db:env     # writes .env.development.local from the running stack
+npm run dev        # http://localhost:3000
+```
+
+`npm run db:start` applies every migration and then `supabase/seed.sql`, which
+adds a tech, three services and Sunday–Saturday working hours — `/book` stays
+closed until all three exist, so without a seed each reset would mean
+re-entering them by hand. `npm run db:reset` returns to that clean state in
+seconds, which makes it the right place to try a migration before it goes
+anywhere near production.
+
+**Sign-in needs no email.** The local stack includes a mail catcher; OTP codes
+appear in its web UI (the URL is printed by `db:start`, and `db:env` repeats
+it). No Gmail, no SMTP, no App Passwords.
+
+### The guard
+
+`npm run dev` refuses to start unless `.env.development.local` exists **and**
+points at `127.0.0.1`. That is deliberate: `.env.local` holds the *production*
+credentials and Next.js loads it in every environment, so a missing dev file
+would otherwise silently point a dev server at the salon's real clients,
+appointments and takings with nothing on screen to say so.
+
+To run against production on purpose, use `npm run dev:prod`.
+
+### Tests
+
+```bash
+npm run test:local   # against the local stack — safe, use this one
+npm run test         # against the LIVE project — writes fixtures to real data
+```
+
+Both run the same 53 tests. `test:local` loads `.env.development.local` and
+refuses to run if it is missing or non-local. Plain `npm run test` still points
+at whatever is in `.env.local`, which is production — it cleans up after
+itself, but there is no reason to take the risk now that a local stack exists.
+
+```bash
 npm run build
 ```
 
@@ -149,11 +189,12 @@ breaks client booking while leaving owner sign-in working).
 ## Tests
 
 ```bash
-npm run test
+npm run test:local
 ```
 
-40 tests, run against a live Supabase project with their own fixtures, all
-cleaned up afterwards:
+53 tests, run against a real Postgres with their own fixtures, all cleaned up
+afterwards. Prefer `test:local` — see [the guard](#the-guard); `npm run test`
+runs the same suite against the live project:
 
 - **`tests/booking.test.ts`** — slot generation: granularity, service
   durations, existing appointments, time off, lead time, booking horizon, and

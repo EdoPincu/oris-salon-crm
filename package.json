@@ -3,12 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/local-env.mjs && next dev",
+    "dev:prod": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:local": "node scripts/local-env.mjs vitest run",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:env": "node scripts/write-local-env.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",
