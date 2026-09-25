@@ -95,74 +95,21 @@ While that email is open, also confirm:
   generating and using a real one). The app's OTP input doesn't hardcode a
   digit count for exactly this reason — see `components/otp-form.tsx`.
 
----
+## Not sent by the app
 
-# The app's own SMTP — a second, separate configuration
+Everything on this page configures **Supabase Auth's** SMTP, which sends
+sign-in codes from Supabase's own servers. **The app itself sends no email.**
 
-Everything above configures **Supabase Auth's** SMTP, which sends sign-in
-codes. The app cannot reach that connection: it lives inside Supabase and
-only ever sends auth email.
+A "booking approved" notification was built and then removed on 2026-09-25:
+Railway blocks outbound SMTP on Free, Trial and Hobby plans (ports 25, 465,
+587 and 2525 — only Pro is exempt), and routing around it meant adding a
+third-party sending service for one message. The booking confirmation screen
+now points clients at the "התורים שלי" page to see their status instead, so
+nothing promises an email that never arrives. The implementation is in git
+history if it is ever wanted.
 
-So the "booking approved" notification — the one
-`app/(public)/book/wizard.tsx` promises the client on the confirmation
-screen — needs its **own** SMTP credentials, set as environment variables on
-the host. Today both point at the same Gmail mailbox; they are still two
-independent configurations, and changing one does not change the other.
-
-## Railway blocks SMTP — the app sends over HTTPS instead
-
-**Railway blocks outbound SMTP on Free, Trial and Hobby plans.** Ports 25,
-465, 587 and 2525 are all firewalled; only Pro and above are exempt. Every
-SMTP send from production therefore dies at TCP connect with `ETIMEDOUT`,
-which looks exactly like a misconfiguration and is not one. See
-<https://docs.railway.com/networking/outbound-networking>.
-
-So the app sends through **Brevo's HTTPS API** (free tier: 300 emails/day, no
-custom domain required). HTTPS cannot be firewalled the way SMTP is.
-
-**This does not affect sign-in.** Supabase Auth's OTP emails are sent by
-*Supabase's* servers using the SMTP settings in the Supabase dashboard, not by
-the app, so Railway's firewall never touches them.
-
-### Brevo setup
-
-1. Create an account at <https://www.brevo.com>.
-2. **Senders, Domains & Dedicated IPs → Senders → Add a sender**: add the
-   address in `MAIL_FROM` and confirm the verification email. Brevo refuses to
-   send from an unverified sender, and says so in the response body — which
-   `lib/notify/mailer.ts` logs.
-3. **SMTP & API → API Keys → Generate a new API key.**
-4. Set it on the host:
-   ```bash
-   printf '%s' '<the key>' | railway variable set BREVO_API_KEY --stdin --service nailshop
-   ```
-
-`BREVO_API_KEY` is what selects the transport: present means HTTPS, absent
-falls back to SMTP. The SMTP variables below are kept for local development
-and for any future host that permits SMTP.
-
-## Variables
-
-Deliberately generic rather than Gmail-shaped, so moving to a salon mailbox,
-a domain address, or a transactional provider is a config change with **no
-code edit**:
-
-| Variable | Value today | Notes |
-|---|---|---|
-| `SMTP_HOST` | `smtp.gmail.com` | |
-| `SMTP_PORT` | `465` | |
-| `SMTP_SECURE` | `true` | Optional — defaults to `true` for port 465, `false` otherwise |
-| `SMTP_USER` | the Gmail address | Same mailbox as the Supabase SMTP user |
-| `SMTP_PASSWORD` | a Gmail **App Password** | The same one, or a second one generated for the app |
-| `MAIL_FROM` | `הסלון של אורי <address>` | Optional — falls back to `SMTP_USER` |
-
-Set them on Railway **via stdin**, so no secret ever appears in shell history
-or in a process list:
-
-```bash
-printf '%s' 'smtp.gmail.com' | railway variable set SMTP_HOST --stdin --service nailshop
-printf '%s' '<app password>'  | railway variable set SMTP_PASSWORD --stdin --service nailshop
-```
+Because Supabase sends the auth mail, Railway's firewall never touches
+sign-in.
 
 ## Two failure modes that cost real downtime (2026-09-25)
 
@@ -181,22 +128,24 @@ them.** It is displayed as four groups (`abcd efgh ijkl mnop`) and pasting it
 verbatim is the natural thing to do. Supabase passes the field to Gmail
 unchanged, Gmail sees 19 characters, and authentication fails.
 **Type the 16 characters with no spaces into Supabase's SMTP password
-field.** `lib/notify/mailer.ts` strips whitespace itself, so the app's own
-`SMTP_PASSWORD` tolerates either form — which is precisely how the two were
-told apart: the same password authenticated through the app and failed
-through Supabase.
+field.** This was only spotted because a second copy of the same credential,
+in code that stripped whitespace, authenticated fine while Supabase's did
+not — the same password working in one place and failing in the other is
+what pointed at the spaces.
 
 **And a trap that follows from fixing a leak:** changing the Google **account**
 password **revokes every App Password on the account**. That instantly breaks
 Supabase Auth's SMTP and therefore *all* sign-in, owner and client alike, with
 no warning. If the account password ever has to be rotated, plan to
-regenerate and re-enter the App Password in both places in the same sitting.
+regenerate the App Password and re-enter it in Supabase in the same sitting.
 
 ### Diagnosing it quickly
 
 Test the credential against Gmail directly rather than guessing from
-Supabase's generic 500 — `nodemailer`'s `transporter.verify()` reports
-Gmail's actual refusal. Then probe the Auth endpoint to confirm the fix:
+Supabase's generic 500: a throwaway script using `nodemailer`'s
+`transporter.verify()` (`npx nodemailer` is not needed — install it in a
+scratch directory) reports Gmail's actual refusal, which is far more specific.
+Then probe the Auth endpoint to confirm the fix:
 
 ```bash
 curl -s -X POST "$NEXT_PUBLIC_SUPABASE_URL/auth/v1/otp" \
@@ -207,36 +156,3 @@ curl -s -X POST "$NEXT_PUBLIC_SUPABASE_URL/auth/v1/otp" \
 
 `200` with `{}` means Supabase accepted and sent it. Note this sends a real
 code to that address.
-
-## Behaviour when it isn't configured
-
-`lib/notify/mailer.ts` treats missing config as a no-op: it logs a warning
-and returns `false`. It never throws. Local development, the test suite and
-any environment without SMTP keep working — approving an appointment simply
-doesn't email anyone. This is deliberate: the appointment is already
-confirmed and committed by the time the mail is attempted, and a refused
-SMTP connection must never undo that or surface as an error to the owner.
-
-## When the email is sent
-
-Only on a **pending → confirmed** transition of an appointment whose
-`source` is `online`, and only when the client has an email on file.
-
-- Gating on the *previous* status is what makes it idempotent — pressing
-  אישור twice can't send twice, because the second press no longer sees a
-  pending appointment.
-- The `online` check keeps appointments the owner entered by hand from
-  mailing clients unexpectedly. The promise only ever appears in the online
-  booking wizard.
-- `clients.email` is nullable. `book_appointment()` populates it, but only
-  when it creates the client row — a client the owner had already entered by
-  hand, later matched by `profile_id`, can have none. The send is skipped
-  and logged.
-
-## Moving off the personal Gmail
-
-This is a handover prerequisite, and the variables above are why it's cheap:
-create the salon mailbox, generate an App Password, update `SMTP_USER` /
-`SMTP_PASSWORD` / `MAIL_FROM` on the host, and update the Supabase Auth SMTP
-settings separately. No deploy, no code change — though note the app reads
-these at send time, so a Railway variable change does restart the service.
