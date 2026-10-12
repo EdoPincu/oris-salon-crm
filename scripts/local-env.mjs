@@ -39,11 +39,25 @@ function parseEnvFile(path) {
   return out;
 }
 
-/** Local means loopback. Anything else is somebody's real database. */
-function isLocal(url) {
+/**
+ * Hosted Supabase projects that hold no real data. An allowlist, not a
+ * denylist of production: an unrecognised host is refused, so a typo or a
+ * copied production URL can never slip through.
+ */
+const DEV_PROJECT_HOSTS = [
+  "qqjbomzxqvbauutvhrpk.supabase.co", // ori_salon_dev — fake seed data only
+];
+
+/** Loopback, or a known dev project. Anything else is somebody's real database. */
+function isDev(url) {
   try {
     const { hostname } = new URL(url);
-    return hostname === "127.0.0.1" || hostname === "localhost" || hostname === "[::1]";
+    return (
+      hostname === "127.0.0.1" ||
+      hostname === "localhost" ||
+      hostname === "[::1]" ||
+      DEV_PROJECT_HOSTS.includes(hostname)
+    );
   } catch {
     return false;
   }
@@ -52,7 +66,9 @@ function isLocal(url) {
 if (!existsSync(ENV_FILE)) {
   die(
     `${ENV_FILE} not found — refusing to start against production.\n\n` +
-      `    Start the local stack and write the file:\n` +
+      `    Either point it at the hosted dev project (ori_salon_dev) —\n` +
+      `    see "Development database" in README.md — or start the local\n` +
+      `    stack (needs Docker) and write the file:\n` +
       `      npm run db:start\n` +
       `      npm run db:env\n`,
   );
@@ -63,19 +79,18 @@ const env = parseEnvFile(ENV_FILE);
 const missing = REQUIRED.filter((k) => !env[k]);
 if (missing.length) die(`${ENV_FILE} is missing: ${missing.join(", ")}`);
 
-if (!isLocal(env.NEXT_PUBLIC_SUPABASE_URL)) {
+if (!isDev(env.NEXT_PUBLIC_SUPABASE_URL)) {
   die(
-    `${ENV_FILE} does not point at a local Supabase.\n\n` +
+    `${ENV_FILE} does not point at a dev database.\n\n` +
       `    Found host: ${new URL(env.NEXT_PUBLIC_SUPABASE_URL).hostname}\n` +
-      `    Expected:   127.0.0.1\n\n` +
-      `    This file is for the local stack only. Regenerate it with:\n` +
-      `      npm run db:env\n`,
+      `    Expected:   127.0.0.1 or ${DEV_PROJECT_HOSTS.join(", ")}\n\n` +
+      `    This file is for development only — never production.\n`,
   );
 }
 
 const [cmd, ...args] = process.argv.slice(2);
 if (!cmd) {
-  console.log(`  ✓ local Supabase (${env.NEXT_PUBLIC_SUPABASE_URL})`);
+  console.log(`  ✓ dev Supabase (${env.NEXT_PUBLIC_SUPABASE_URL})`);
   process.exit(0);
 }
 

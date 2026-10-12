@@ -1,14 +1,15 @@
 -- Local development seed. Applied automatically by `supabase db reset`.
 --
 -- Production starts empty by design — the salon enters its own real data, and
--- that principle has not changed. This file exists only so a *local* database
--- is immediately usable: `/book` refuses to open until at least one service,
+-- that principle has not changed. This file exists only so a *dev* database
+-- (the local stack, or the hosted ori_salon_dev project) is immediately usable: `/book` refuses to open until at least one service,
 -- one tech and some working hours exist, so without a seed every reset would
 -- mean re-entering all three by hand before you could test anything.
 --
 -- Deliberately obvious fake data. Nothing here should ever be mistaken for
--- Ori's real menu, and the Supabase CLI only runs this against the local
--- stack — `supabase db push` does not apply it to the linked project.
+-- Ori's real menu. `supabase db reset` applies it locally; plain
+-- `supabase db push` does not, so it never reaches production unless someone
+-- passes --include-seed against the wrong project.
 
 -- Shop settings: the row already exists (id is a one-row check constraint),
 -- so update rather than insert. Israel locale, matching production.
@@ -16,7 +17,7 @@ update public.settings
 set display_name             = 'סלון בדיקות (מקומי)',
     timezone                 = 'Asia/Jerusalem',
     currency                 = 'ILS',
-    booking_lead_hours       = 0,   -- 0 locally so a slot later today is bookable
+    booking_lead_hours       = 12,  -- the schema default; the lead-time tests assume it
     booking_horizon_days     = 60,
     slot_granularity_minutes = 15,
     auto_confirm_online      = false

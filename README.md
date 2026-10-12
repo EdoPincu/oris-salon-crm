@@ -95,48 +95,95 @@ any language without breaking the recovery path.
 
 ## Running it locally
 
-Development runs against a **local Supabase stack**, not the hosted project —
-so test bookings, approvals and cancellations can never reach real salon data.
+Development never runs against the production project — so test bookings,
+approvals and cancellations can never reach real salon data. There are two
+dev databases to choose from; `.env.development.local` says which one.
+
+### Development database
+
+**Hosted dev project (`ori_salon_dev`, no Docker needed).** A second Supabase
+project, ref `qqjbomzxqvbauutvhrpk`, holding only the seed data below and
+test fixtures. Put its URL and keys in `.env.development.local`:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://qqjbomzxqvbauutvhrpk.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<ori_salon_dev anon key>
+SUPABASE_SERVICE_ROLE_KEY=<ori_salon_dev service_role key>
+```
+
+Migrations reach it the same way as production, so link a *scratch copy* of
+`supabase/` to it rather than relinking this repo (which stays linked to
+production for `supabase gen types --linked`):
+
+```bash
+supabase link --project-ref qqjbomzxqvbauutvhrpk   # run inside the scratch copy
+supabase db push --linked --include-seed           # seed only on first setup
+```
+
+Sign-in there sends real emails through the dev project's own Gmail SMTP
+and Hebrew templates — both are per-project dashboard settings, so a fresh
+dev project starts with Supabase's English *link* email and needs
+`docs/email-templates/magic-link-otp.md` pasted into its **Magic Link** and
+**Confirm signup** templates. The dev project is not covered by the
+keep-alive, so it pauses after ~7 idle days; restore it from the dashboard.
+To get an owner account, sign in once at `/sign-in`, then:
+
+```bash
+node scripts/local-env.mjs npx tsx scripts/promote-owner.ts you@example.com
+```
+
+(The wrapper makes the script use the dev project; run bare, it would read
+`.env.local` and promote someone in production.)
+
+**Local stack (needs Docker).**
+
+```bash
+npm run db:start   # local Supabase (needs Docker Desktop running)
+npm run db:env     # writes .env.development.local from the running stack
+```
+
+`npm run db:start` applies every migration and then `supabase/seed.sql`.
+`npm run db:reset` returns to that clean state in seconds, which makes it the
+right place to try a migration before it goes anywhere near production. The
+local stack includes a mail catcher; OTP codes appear in its web UI (the URL is
+printed by `db:start`, and `db:env` repeats it).
+
+Either way, then:
 
 ```bash
 npm install
-npm run db:start   # local Supabase (needs Docker Desktop running)
-npm run db:env     # writes .env.development.local from the running stack
 npm run dev        # http://localhost:3000
 ```
 
-`npm run db:start` applies every migration and then `supabase/seed.sql`, which
-adds a tech, three services and Sunday–Saturday working hours — `/book` stays
-closed until all three exist, so without a seed each reset would mean
-re-entering them by hand. `npm run db:reset` returns to that clean state in
-seconds, which makes it the right place to try a migration before it goes
-anywhere near production.
-
-**Sign-in needs no email.** The local stack includes a mail catcher; OTP codes
-appear in its web UI (the URL is printed by `db:start`, and `db:env` repeats
-it). No Gmail, no SMTP, no App Passwords.
+The seed adds a tech, three services and Sunday–Saturday working hours —
+`/book` stays closed until all three exist. Lead time is the 12-hour default,
+so the earliest bookable slot is tomorrow-ish.
 
 ### The guard
 
 `npm run dev` refuses to start unless `.env.development.local` exists **and**
-points at `127.0.0.1`. That is deliberate: `.env.local` holds the *production*
-credentials and Next.js loads it in every environment, so a missing dev file
-would otherwise silently point a dev server at the salon's real clients,
-appointments and takings with nothing on screen to say so.
+points at a known dev database: `127.0.0.1`, or a host listed in
+`DEV_PROJECT_HOSTS` in `scripts/local-env.mjs`. That list is an allowlist on
+purpose — an unrecognised host is refused, production included. `.env.local`
+holds the *production* credentials and Next.js loads it in every environment,
+so a missing dev file would otherwise silently point a dev server at the
+salon's real clients, appointments and takings with nothing on screen to say so.
 
-To run against production on purpose, use `npm run dev:prod`.
+To run against production on purpose, use `npm run dev:prod`. It goes through
+`scripts/prod-env.mjs`, which pre-loads `.env.local`: a bare `next dev` would
+not be production, because Next.js gives `.env.development.local` priority.
 
 ### Tests
 
 ```bash
-npm run test:local   # against the local stack — safe, use this one
+npm run test:local   # against the dev database — safe, use this one
 npm run test         # against the LIVE project — writes fixtures to real data
 ```
 
 Both run the same 53 tests. `test:local` loads `.env.development.local` and
-refuses to run if it is missing or non-local. Plain `npm run test` still points
+refuses to run if it is missing or not a dev database. Plain `npm run test` still points
 at whatever is in `.env.local`, which is production — it cleans up after
-itself, but there is no reason to take the risk now that a local stack exists.
+itself, but there is no reason to take the risk now that a dev database exists.
 
 ```bash
 npm run build
